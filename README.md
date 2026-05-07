@@ -1,16 +1,26 @@
-# React + Vite
+# Caixa & Estoque Fácil
+**Solução Digital para Pequenos Comércios**
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Sobre o Projeto
+O "Caixa & Estoque Fácil" é uma aplicação web responsiva projetada para atender às necessidades de um minimercado local na cidade de Arapoema-TO. O objetivo principal é oferecer uma ferramenta digital prática e acessível para centralizar o registro de entradas e saídas financeiras, gerar relatórios e permitir uma visão clara e em tempo real da situação econômica do estabelecimento, além de integrar essas movimentações à gestão do estoque.
 
-Currently, two official plugins are available:
+Este projeto é desenvolvido como requisito parcial da disciplina de **Elaboração e Gestão de Projetos do Curso de TADS da Universidade Estadual do Tocantins (UNITINS)**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack Tecnológica
+A arquitetura do sistema adota um modelo Serverless/BaaS, focando em alta performance e sincronização em tempo real:
+* **Frontend:** React com Vite (Interface componentizada, rápida e responsiva).
+* **Backend e Banco de Dados:** Supabase / PostgreSQL (Autenticação e banco de dados robusto com WebSockets para atualização em tempo real).
 
-## React Compiler
+## Funcionalidades do MVP (Mínimo Produto Viável)
+O escopo inicial foca no tripé essencial para o funcionamento do negócio:
+- [x] **Sprint 1:** Setup do projeto, UI do Resumo do Caixa e simulação de Saldo em Tempo Real (RF03).
+- [ ] Registro detalhado de Entradas (RF01) e Saídas (RF02).
+- [ ] Cadastro de Produtos (RF05) e Atualização Automática de Estoque (RF06).
+- [ ] Consulta e Relatórios de Lançamentos em tempo real (RF14).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Como executar o projeto localmente
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Clone o repositório:
+```bash
+git clone https://github.com/FernandoUnitins/caixa-estoque-facil.git
+```
