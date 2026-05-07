@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  // Estado para os valores (funcionalidade essencial)
+  // Estado para os valores
   const [entradas, setEntradas] = useState(0.0);
   const [saidas, setSaidas] = useState(0.0);
 
-  // --- NOVA LINHA PARA A DATA DINÂMICA ---
+  // DATA DINÂMICA
   const dataHoje = new Date().toLocaleDateString('pt-BR');
 
   const saldo = entradas - saidas;
@@ -30,7 +30,6 @@ function App() {
       <header>
         <h1>Caixa & Estoque Fácil</h1>
         <h2>RESUMO DO CAIXA</h2>
-        {/* --- AQUI A DATA ATUALIZA SOZINHA --- */}
         <p>{dataHoje}</p> 
       </header>
 
