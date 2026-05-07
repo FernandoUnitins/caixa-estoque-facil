@@ -1,0 +1,177 @@
+/* Importando uma fonte moderna e limpa */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Reset básico */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f4f7f6; /* Fundo cinza bem claro para destacar o app */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #333;
+}
+
+/* Container principal simulando a tela de um celular */
+.app-container {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 400px; /* Mantém o design contido e elegante no desktop */
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  padding: 35px 25px;
+  margin: 20px;
+}
+
+/* Cabeçalho */
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  font-size: 1.2rem;
+  color: #4f46e5; /* Cor primária (Indigo) moderna */
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+header h2 {
+  font-size: 1rem;
+  color: #374151;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+header p {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin-top: 5px;
+}
+
+/* Caixa de Resumo */
+.resumo-box {
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.linha-resumo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.linha-resumo span:first-child {
+  font-weight: 500;
+}
+
+/* Cores de status */
+.valor-entrada {
+  color: #10b981; /* Verde esmeralda */
+  font-weight: 600;
+}
+
+.valor-saida {
+  color: #ef4444; /* Vermelho moderno */
+  font-weight: 600;
+}
+
+.valor-saldo {
+  color: #4f46e5;
+  font-size: 1.2rem;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 15px 0;
+}
+
+.saldo {
+  font-size: 1.05rem;
+  color: #111827;
+  padding-bottom: 10px;
+}
+
+/* Botões Globais */
+button {
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+/* Botão Secundário (Ver Lançamentos) */
+.btn-secundario {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  margin-top: 10px;
+}
+
+.btn-secundario:hover {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+/* Área de ações e botões principais */
+.acoes-lancamento {
+  margin-top: 35px;
+  text-align: center;
+}
+
+.acoes-lancamento p {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.botoes {
+  display: flex;
+  gap: 15px;
+}
+
+.btn-entrada {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-entrada:hover {
+  background-color: #059669;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  transform: translateY(-2px);
+}
+
+.btn-saida {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-saida:hover {
+  background-color: #dc2626;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Responsividade extra para telas muito pequenas */
+@media (max-width: 350px) {
+  .botoes {
+    flex-direction: column;
+  }
+}
