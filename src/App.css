@@ -25,8 +25,47 @@ body {
   max-width: 400px; /* Mantém o design contido e elegante no desktop */
   border-radius: 24px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-  padding: 35px 25px;
+  padding: 35px 25px 80px 25px; /* Espaço embaixo para o menu */
   margin: 20px;
+  position: relative;
+  overflow: hidden;
+  min-height: 550px;
+}
+
+/* Container específico para a tela de login (sem o espaço do menu) */
+.auth-container {
+  padding-bottom: 35px;
+  min-height: auto;
+}
+
+/* Animações de transição */
+.tela-login, .tela {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Topo App (Usuário e Logout) */
+.topo-app {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+.btn-sair {
+  background: transparent;
+  color: #ef4444;
+  padding: 5px 10px;
+  width: auto;
+  font-size: 0.8rem;
+}
+.btn-sair:hover {
+  background: #fef2f2;
 }
 
 /* Cabeçalho */
@@ -34,25 +73,58 @@ header {
   text-align: center;
   margin-bottom: 30px;
 }
-
 header h1 {
   font-size: 1.2rem;
-  color: #4f46e5; /* Cor primária (Indigo) moderna */
+  color: #4f46e5;
   font-weight: 700;
   margin-bottom: 20px;
 }
-
 header h2 {
   font-size: 1rem;
   color: #374151;
   font-weight: 600;
   letter-spacing: 0.5px;
 }
-
 header p {
   font-size: 0.85rem;
   color: #9ca3af;
   margin-top: 5px;
+}
+
+/* Formulários */
+.form-padrao {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.input-padrao {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  font-size: 0.95rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: all 0.2s ease;
+  background-color: #f9fafb;
+}
+.input-padrao:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background-color: #ffffff;
+}
+
+/* Alternância de Login / Cadastro */
+.login-toggle {
+  margin-top: 25px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+.login-toggle span {
+  color: #4f46e5;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 /* Caixa de Resumo */
@@ -61,7 +133,6 @@ header p {
   display: flex;
   flex-direction: column;
 }
-
 .linha-resumo {
   display: flex;
   justify-content: space-between;
@@ -70,33 +141,16 @@ header p {
   font-size: 0.95rem;
   color: #4b5563;
 }
-
-.linha-resumo span:first-child {
-  font-weight: 500;
-}
-
-/* Cores de status */
-.valor-entrada {
-  color: #10b981; /* Verde esmeralda */
-  font-weight: 600;
-}
-
-.valor-saida {
-  color: #ef4444; /* Vermelho moderno */
-  font-weight: 600;
-}
-
-.valor-saldo {
-  color: #4f46e5;
-  font-size: 1.2rem;
-}
+.linha-resumo span:first-child { font-weight: 500; }
+.valor-entrada { color: #10b981; font-weight: 600; }
+.valor-saida { color: #ef4444; font-weight: 600; }
+.valor-saldo { color: #4f46e5; font-size: 1.2rem; }
 
 hr {
   border: none;
   border-top: 1px solid #e5e7eb;
   margin: 15px 0;
 }
-
 .saldo {
   font-size: 1.05rem;
   color: #111827;
@@ -114,64 +168,93 @@ button {
   transition: all 0.2s ease;
   width: 100%;
 }
+button:disabled { opacity: 0.7; cursor: not-allowed; }
 
-/* Botão Secundário (Ver Lançamentos) */
-.btn-secundario {
-  background-color: #f3f4f6;
-  color: #4b5563;
-  margin-top: 10px;
-}
+.btn-secundario { background-color: #f3f4f6; color: #4b5563; margin-top: 10px; }
+.btn-secundario:hover { background-color: #e5e7eb; color: #111827; }
 
-.btn-secundario:hover {
-  background-color: #e5e7eb;
-  color: #111827;
-}
+.btn-entrada { background-color: #10b981; color: white; }
+.btn-entrada:hover:not(:disabled) { background-color: #059669; transform: translateY(-2px); }
 
-/* Área de ações e botões principais */
-.acoes-lancamento {
-  margin-top: 35px;
-  text-align: center;
-}
+.btn-saida { background-color: #ef4444; color: white; }
+.btn-saida:hover:not(:disabled) { background-color: #dc2626; transform: translateY(-2px); }
 
-.acoes-lancamento p {
-  font-size: 0.8rem;
-  color: #6b7280;
-  margin-bottom: 15px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+/* Área de ações do Resumo */
+.acoes-lancamento { margin-top: 35px; text-align: center; }
+.acoes-lancamento p { font-size: 0.8rem; color: #6b7280; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; }
+.botoes { display: flex; gap: 15px; }
 
-.botoes {
+/* Menu Inferior (Navegação) */
+.menu-inferior {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: white;
+  border-top: 1px solid #e5e7eb;
   display: flex;
-  gap: 15px;
+  justify-content: space-around;
+  padding: 10px 0;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.02);
 }
-
-.btn-entrada {
-  background-color: #10b981;
-  color: white;
+.menu-inferior button {
+  background: transparent;
+  color: #9ca3af;
+  width: auto;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
+.menu-inferior button:hover { color: #6b7280; background-color: #f9fafb; }
+.menu-inferior button.ativo { color: #4f46e5; background: #eef2ff; font-weight: 700; }
 
-.btn-entrada:hover {
-  background-color: #059669;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-  transform: translateY(-2px);
-}
-
-.btn-saida {
-  background-color: #ef4444;
-  color: white;
-}
-
-.btn-saida:hover {
-  background-color: #dc2626;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
-  transform: translateY(-2px);
-}
-
-/* Responsividade extra para telas muito pequenas */
 @media (max-width: 350px) {
-  .botoes {
-    flex-direction: column;
+  .botoes { flex-direction: column; }
+}
+
+/* TOASTS (Notificações Modernas) */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px; /* Para celular, você pode mudar right para left: 20px e width: calc(100% - 40px) */
+  z-index: 9999;
+  padding: 15px 25px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, slideOut 0.3s ease 2.7s forwards;
+}
+
+@media (max-width: 500px) {
+  .toast-container {
+    left: 20px;
+    right: 20px;
+    text-align: center;
   }
+}
+
+.toast-sucesso { background-color: #10b981; }
+.toast-erro { background-color: #ef4444; }
+
+@keyframes slideIn {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-50px); opacity: 0; }
+}
+
+/* Telas e Configurações */
+.config-section h3 {
+  font-size: 1.05rem;
+  color: #374151;
+  margin-bottom: 15px;
 }
