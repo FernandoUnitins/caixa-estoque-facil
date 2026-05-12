@@ -258,3 +258,62 @@ button:disabled { opacity: 0.7; cursor: not-allowed; }
   color: #374151;
   margin-bottom: 15px;
 }
+
+/* ========================================================
+   AJUSTES DE RESPONSIVIDADE PARA CELULARES (Até 768px)
+   ======================================================== */
+@media (max-width: 768px) {
+  /* 1. Faz a área de conteúdo usar quase toda a largura da tela */
+  .conteudo-dinamico {
+    padding: 10px !important; 
+  }
+
+  /* 2. Estica a caixa branca principal (Tela) para ocupar o espaço */
+  .tela {
+    padding: 15px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 16px !important;
+    margin: 0 !important;
+  }
+
+  /* 3. Ajusta o Menu Inferior para os botões não ficarem espremidos */
+  .menu-inferior {
+    padding: 8px 5px !important;
+    gap: 2px !important;
+  }
+
+  .menu-inferior button {
+    padding: 5px !important;
+  }
+
+  .menu-inferior button span {
+    font-size: 0.65rem !important; /* Diminui um pouco a letra para caber telas finas */
+  }
+
+  /* 4. Ajusta o Topo para não quebrar o nome do usuário se for grande */
+  .topo-app {
+    padding: 10px 15px !important;
+    font-size: 0.9rem !important;
+  }
+
+  /* 5. Previne o "Zoom Automático" irritante dos celulares ao clicar num input */
+  .input-padrao {
+    font-size: 16px !important; 
+  }
+
+  /* 6. A Tela de Login fica mais ajustada nas laterais */
+  .tela-login {
+    width: 95% !important;
+    padding: 25px 20px !important;
+  }
+}
+
+/* Garante que nada vaze da tela quebrando a barra de rolagem horizontal */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+}
