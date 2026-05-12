@@ -259,105 +259,101 @@ button:disabled { opacity: 0.7; cursor: not-allowed; }
   margin-bottom: 15px;
 }
 
-
 /* ========================================================
-   MODO APP: TELA FIXA, MENU FIXO E SCROLL INTERNO
+   MODO APP: TELA FIXA, MENU FIXO E SCROLL INTERNO (DEFINITIVO)
    ======================================================== */
 
-/* 1. Trava o corpo do site para ter EXATAMENTE o tamanho da tela do celular */
-html, body, #root {
+/* 1. Trava a raiz do site no tamanho exato da janela do navegador */
+html, body {
   margin: 0 !important;
   padding: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  height: 100dvh !important; /* dVH é mágico no mobile, desconta a barra de endereço */
-  overflow: hidden !important; /* PROÍBE a rolagem da página inteira (o efeito de puxar) */
+  width: 100% !important;
+  height: 100% !important; /* Melhor que 100vh para evitar o bug do celular */
+  overflow: hidden !important; /* Bloqueia o "puxar" da tela no celular */
   background-color: #f3f4f6 !important;
-  box-sizing: border-box;
+  touch-action: none; /* Evita o "pull-to-refresh" (recarregar puxando pra baixo) */
+}
+
+/* O #root do React também precisa preencher 100% e centralizar no PC */
+#root {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  justify-content: center !important; /* Centraliza a caixa no Mac/PC */
 }
 
 *, *:before, *:after {
-  box-sizing: inherit;
+  box-sizing: border-box;
 }
 
-/* 2. O container principal vira uma coluna que preenche a tela */
+/* 2. O seu "Celular Virtual" (Container Principal) */
 .app-container {
   display: flex !important;
   flex-direction: column !important;
-  width: 100vw !important;
-  height: 100% !important;
+  width: 100% !important;
+  max-width: 500px !important; /* Largura perfeita de um celular na tela do PC */
+  height: 100% !important; /* Pega exatamente a altura travada do #root */
+  background-color: #ffffff !important;
   overflow: hidden !important;
+  box-shadow: 0px 0px 20px rgba(0,0,0,0.1) !important; /* Sombra bonita no PC */
 }
 
-/* 3. O Topo não encolhe (Fica chumbado no teto) */
+/* 3. Topo Chumbado no Teto */
 .topo-app {
   flex-shrink: 0 !important;
+  width: 100% !important;
   z-index: 10;
 }
 
-/* 4. O "Miolo" (onde ficam as telas) estica e PERMITE ROLAGEM APENAS AQUI DENTRO */
+/* 4. O "Miolo" (A ÚNICA PARTE QUE VAI ROLAR) */
 .conteudo-dinamico {
-  flex: 1 1 auto !important; /* Estica para preencher o espaço restante */
-  overflow-y: auto !important; /* Só o meio rola para baixo */
+  flex: 1 1 auto !important; /* Ocupa todo o espaço que sobrar entre o topo e o menu */
+  width: 100% !important;
+  overflow-y: auto !important; /* Habilita a barra de rolagem AQUI */
   overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important; /* Rolagem suave de celular */
   display: flex !important;
   flex-direction: column !important;
-  align-items: center !important; /* Centraliza as telas no meio */
-  padding: 10px !important;
-  -webkit-overflow-scrolling: touch; /* Deixa a rolagem macia no iPhone/Android */
+  padding: 0 !important; /* O padding vai ficar na .tela */
 }
 
-/* 5. A Tela Branca em si */
+/* 5. A Tela em si (Carrinho, Listas, etc) */
 .tela {
   width: 100% !important;
-  max-width: 600px !important; /* Em PCs, não fica gigante, fica parecendo um app centralizado */
-  flex: 1 0 auto !important; /* Se a tela for pequena, permite esticar */
+  flex: 1 0 auto !important; 
   display: flex !important;
   flex-direction: column !important;
-  margin: 0 auto !important; /* Força o alinhamento no centro absoluto */
-  padding: 15px !important;
-  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 15px 15px 30px 15px !important; /* Espaço extra no final para não colar no menu */
 }
 
-/* 6. A Barra Inferior (Menu) chumbada na base */
+/* 6. Menu Inferior Chumbado no Chão */
 .menu-inferior {
-  flex-shrink: 0 !important; /* Proíbe o menu de ser esmagado pelo conteúdo */
+  flex-shrink: 0 !important; /* Impede que ele seja esmagado pelo miolo */
   width: 100% !important;
   z-index: 10;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important; /* Evita que a barra do iPhone (Notch) tampe os botões */
+  background-color: #ffffff !important;
+  border-top: 1px solid #e5e7eb !important;
+  padding-bottom: env(safe-area-inset-bottom) !important; /* Proteção para iPhones sem botão */
 }
 
-/* 7. Arruma a Tela de Login (que estava sendo jogada pro lado) */
+/* 7. Arruma a Tela de Login e centraliza ela no meio da tela */
 .auth-container {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  padding: 20px !important;
+  background-color: #f3f4f6 !important;
 }
 
 .tela-login {
-  width: 100% !important;
-  max-width: 400px !important;
-  margin: 0 auto !important; /* Centraliza com força bruta */
-  box-sizing: border-box !important;
+  width: 90% !important;
+  padding: 25px !important;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
-/* 8. Ajustes finos para Mobile */
-@media (max-width: 768px) {
-  .menu-inferior {
-    padding: 5px !important;
-  }
-  .menu-inferior button span {
-    font-size: 0.65rem !important; /* Letra um pouco menor pra caber certinho */
-  }
-  .input-padrao {
-    font-size: 16px !important; /* Fundamental: Evita que o celular dê zoom na tela ao digitar */
-  }
-}
-
-/* Se a tela for de Computador/Tablet grande (maior que 768px) */
-@media (min-width: 769px) {
-  .tela {
-    max-width: 1000px !important; /* Deixa a caixa branca mais larga no PC */
-  }
+/* 8. Proteção contra o "Zoom Automático" nos celulares ao digitar */
+input, select, textarea {
+  font-size: 16px !important;
 }
