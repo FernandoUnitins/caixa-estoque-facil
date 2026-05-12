@@ -260,100 +260,223 @@ button:disabled { opacity: 0.7; cursor: not-allowed; }
 }
 
 /* ========================================================
-   MODO APP: TELA FIXA, MENU FIXO E SCROLL INTERNO (DEFINITIVO)
+   PADRÃO WEB RESPONSIVO (DESKTOP E MOBILE)
    ======================================================== */
 
-/* 1. Trava a raiz do site no tamanho exato da janela do navegador */
-html, body {
-  margin: 0 !important;
-  padding: 0 !important;
-  width: 100% !important;
-  height: 100% !important; /* Melhor que 100vh para evitar o bug do celular */
-  overflow: hidden !important; /* Bloqueia o "puxar" da tela no celular */
-  background-color: #f3f4f6 !important;
-  touch-action: none; /* Evita o "pull-to-refresh" (recarregar puxando pra baixo) */
-}
-
-/* O #root do React também precisa preencher 100% e centralizar no PC */
-#root {
-  width: 100% !important;
-  height: 100% !important;
-  display: flex !important;
-  justify-content: center !important; /* Centraliza a caixa no Mac/PC */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 *, *:before, *:after {
   box-sizing: border-box;
 }
 
-/* 2. O seu "Celular Virtual" (Container Principal) */
 .app-container {
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
-  max-width: 500px !important; /* Largura perfeita de um celular na tela do PC */
-  height: 100% !important; /* Pega exatamente a altura travada do #root */
-  background-color: #ffffff !important;
-  overflow: hidden !important;
-  box-shadow: 0px 0px 20px rgba(0,0,0,0.1) !important; /* Sombra bonita no PC */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-/* 3. Topo Chumbado no Teto */
-.topo-app {
-  flex-shrink: 0 !important;
-  width: 100% !important;
-  z-index: 10;
+/* ==========================================
+   CABEÇALHO E NAVEGAÇÃO SUPERIOR
+   ========================================== */
+.navbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-/* 4. O "Miolo" (A ÚNICA PARTE QUE VAI ROLAR) */
+.navbar-brand {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-menu-desktop {
+  display: none; /* Escondido no celular */
+}
+
+.navbar-user {
+  display: none; /* Escondido no celular */
+}
+
+.btn-menu-mobile {
+  background: none;
+  border: none;
+  color: #4b5563;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+}
+
+.menu-mobile-dropdown {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 10px 20px;
+  z-index: 999;
+}
+
+.menu-mobile-dropdown button {
+  background: none;
+  border: none;
+  padding: 15px 0;
+  text-align: left;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-mobile-dropdown button:last-child {
+  border-bottom: none;
+}
+
+/* ==========================================
+   ÁREA DE CONTEÚDO E TELAS
+   ========================================== */
 .conteudo-dinamico {
-  flex: 1 1 auto !important; /* Ocupa todo o espaço que sobrar entre o topo e o menu */
-  width: 100% !important;
-  overflow-y: auto !important; /* Habilita a barra de rolagem AQUI */
-  overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch !important; /* Rolagem suave de celular */
-  display: flex !important;
-  flex-direction: column !important;
-  padding: 0 !important; /* O padding vai ficar na .tela */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  width: 100%;
 }
 
-/* 5. A Tela em si (Carrinho, Listas, etc) */
 .tela {
-  width: 100% !important;
-  flex: 1 0 auto !important; 
-  display: flex !important;
-  flex-direction: column !important;
-  margin: 0 !important;
-  padding: 15px 15px 30px 15px !important; /* Espaço extra no final para não colar no menu */
+  width: 100%;
+  max-width: 800px; /* Largura agradável no PC */
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
 }
 
-/* 6. Menu Inferior Chumbado no Chão */
-.menu-inferior {
-  flex-shrink: 0 !important; /* Impede que ele seja esmagado pelo miolo */
-  width: 100% !important;
-  z-index: 10;
-  background-color: #ffffff !important;
-  border-top: 1px solid #e5e7eb !important;
-  padding-bottom: env(safe-area-inset-bottom) !important; /* Proteção para iPhones sem botão */
+/* Telas com fundo branco e sombra (Resumo, Cadastros) */
+.tela-branca {
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  border: 1px solid #e5e7eb;
 }
 
-/* 7. Arruma a Tela de Login e centraliza ela no meio da tela */
 .auth-container {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  background-color: #f3f4f6 !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
 }
 
 .tela-login {
-  width: 90% !important;
-  padding: 25px !important;
+  width: 100%;
+  max-width: 400px;
   background-color: #ffffff;
+  padding: 30px;
   border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  border: 1px solid #e5e7eb;
 }
 
-/* 8. Proteção contra o "Zoom Automático" nos celulares ao digitar */
+/* Evita o Zoom automático do iOS/Android em inputs */
 input, select, textarea {
   font-size: 16px !important;
+}
+
+/* ==========================================
+   COMPORTAMENTO PARA DESKTOP (PC/Mac)
+   ========================================== */
+@media (min-width: 768px) {
+  .btn-menu-mobile {
+    display: none; /* Some com o ícone de sanduíche */
+  }
+
+  .menu-mobile-dropdown {
+    display: none !important; /* Garante que o dropdown não apareça */
+  }
+
+  .navbar-menu-desktop {
+    display: flex;
+    gap: 15px;
+  }
+
+  .navbar-menu-desktop button {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .navbar-menu-desktop button:hover {
+    background-color: #f3f4f6;
+    color: #4f46e5;
+  }
+
+  .navbar-menu-desktop button.ativo {
+    color: #4f46e5;
+    background-color: #eef2ff;
+  }
+
+  .navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .navbar-user span {
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .navbar-user button {
+    background-color: #fef2f2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 }
