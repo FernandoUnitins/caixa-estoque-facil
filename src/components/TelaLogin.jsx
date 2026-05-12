@@ -75,10 +75,6 @@ export default function TelaLogin({ mostrarToast }) {
           {loading ? 'Aguarde...' : 'ENTRAR'}
         </button>
       </form>
-
-      <div className="login-toggle">
-        <span onClick={handleEsqueciSenha}>Esqueci minha senha</span>
-      </div>
     </div>
   );
 }

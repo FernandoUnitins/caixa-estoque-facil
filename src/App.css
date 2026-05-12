@@ -259,61 +259,105 @@ button:disabled { opacity: 0.7; cursor: not-allowed; }
   margin-bottom: 15px;
 }
 
+
 /* ========================================================
-   AJUSTES DE RESPONSIVIDADE PARA CELULARES (Até 768px)
+   MODO APP: TELA FIXA, MENU FIXO E SCROLL INTERNO
    ======================================================== */
-@media (max-width: 768px) {
-  /* 1. Faz a área de conteúdo usar quase toda a largura da tela */
-  .conteudo-dinamico {
-    padding: 10px !important; 
-  }
 
-  /* 2. Estica a caixa branca principal (Tela) para ocupar o espaço */
-  .tela {
-    padding: 15px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    border-radius: 16px !important;
-    margin: 0 !important;
-  }
-
-  /* 3. Ajusta o Menu Inferior para os botões não ficarem espremidos */
-  .menu-inferior {
-    padding: 8px 5px !important;
-    gap: 2px !important;
-  }
-
-  .menu-inferior button {
-    padding: 5px !important;
-  }
-
-  .menu-inferior button span {
-    font-size: 0.65rem !important; /* Diminui um pouco a letra para caber telas finas */
-  }
-
-  /* 4. Ajusta o Topo para não quebrar o nome do usuário se for grande */
-  .topo-app {
-    padding: 10px 15px !important;
-    font-size: 0.9rem !important;
-  }
-
-  /* 5. Previne o "Zoom Automático" irritante dos celulares ao clicar num input */
-  .input-padrao {
-    font-size: 16px !important; 
-  }
-
-  /* 6. A Tela de Login fica mais ajustada nas laterais */
-  .tela-login {
-    width: 95% !important;
-    padding: 25px 20px !important;
-  }
-}
-
-/* Garante que nada vaze da tela quebrando a barra de rolagem horizontal */
-* {
+/* 1. Trava o corpo do site para ter EXATAMENTE o tamanho da tela do celular */
+html, body, #root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important; /* dVH é mágico no mobile, desconta a barra de endereço */
+  overflow: hidden !important; /* PROÍBE a rolagem da página inteira (o efeito de puxar) */
+  background-color: #f3f4f6 !important;
   box-sizing: border-box;
 }
 
-html, body {
-  overflow-x: hidden;
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+/* 2. O container principal vira uma coluna que preenche a tela */
+.app-container {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100vw !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+/* 3. O Topo não encolhe (Fica chumbado no teto) */
+.topo-app {
+  flex-shrink: 0 !important;
+  z-index: 10;
+}
+
+/* 4. O "Miolo" (onde ficam as telas) estica e PERMITE ROLAGEM APENAS AQUI DENTRO */
+.conteudo-dinamico {
+  flex: 1 1 auto !important; /* Estica para preencher o espaço restante */
+  overflow-y: auto !important; /* Só o meio rola para baixo */
+  overflow-x: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important; /* Centraliza as telas no meio */
+  padding: 10px !important;
+  -webkit-overflow-scrolling: touch; /* Deixa a rolagem macia no iPhone/Android */
+}
+
+/* 5. A Tela Branca em si */
+.tela {
+  width: 100% !important;
+  max-width: 600px !important; /* Em PCs, não fica gigante, fica parecendo um app centralizado */
+  flex: 1 0 auto !important; /* Se a tela for pequena, permite esticar */
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 auto !important; /* Força o alinhamento no centro absoluto */
+  padding: 15px !important;
+  box-sizing: border-box !important;
+}
+
+/* 6. A Barra Inferior (Menu) chumbada na base */
+.menu-inferior {
+  flex-shrink: 0 !important; /* Proíbe o menu de ser esmagado pelo conteúdo */
+  width: 100% !important;
+  z-index: 10;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important; /* Evita que a barra do iPhone (Notch) tampe os botões */
+}
+
+/* 7. Arruma a Tela de Login (que estava sendo jogada pro lado) */
+.auth-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 20px !important;
+}
+
+.tela-login {
+  width: 100% !important;
+  max-width: 400px !important;
+  margin: 0 auto !important; /* Centraliza com força bruta */
+  box-sizing: border-box !important;
+}
+
+/* 8. Ajustes finos para Mobile */
+@media (max-width: 768px) {
+  .menu-inferior {
+    padding: 5px !important;
+  }
+  .menu-inferior button span {
+    font-size: 0.65rem !important; /* Letra um pouco menor pra caber certinho */
+  }
+  .input-padrao {
+    font-size: 16px !important; /* Fundamental: Evita que o celular dê zoom na tela ao digitar */
+  }
+}
+
+/* Se a tela for de Computador/Tablet grande (maior que 768px) */
+@media (min-width: 769px) {
+  .tela {
+    max-width: 1000px !important; /* Deixa a caixa branca mais larga no PC */
+  }
 }
