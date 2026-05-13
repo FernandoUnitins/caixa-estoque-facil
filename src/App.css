@@ -1,294 +1,38 @@
-/* Importando uma fonte moderna e limpa */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* Reset básico */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f4f7f6; /* Fundo cinza bem claro para destacar o app */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  color: #333;
-}
-
-/* Container principal simulando a tela de um celular */
-.app-container {
-  background-color: #ffffff;
-  width: 100%;
-  max-width: 400px; /* Mantém o design contido e elegante no desktop */
-  border-radius: 24px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-  padding: 35px 25px 80px 25px; /* Espaço embaixo para o menu */
-  margin: 20px;
-  position: relative;
-  overflow: hidden;
-  min-height: 550px;
-}
-
-/* Container específico para a tela de login (sem o espaço do menu) */
-.auth-container {
-  padding-bottom: 35px;
-  min-height: auto;
-}
-
-/* Animações de transição */
-.tela-login, .tela {
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Topo App (Usuário e Logout) */
-.topo-app {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-.btn-sair {
-  background: transparent;
-  color: #ef4444;
-  padding: 5px 10px;
-  width: auto;
-  font-size: 0.8rem;
-}
-.btn-sair:hover {
-  background: #fef2f2;
-}
-
-/* Cabeçalho */
-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-header h1 {
-  font-size: 1.2rem;
-  color: #4f46e5;
-  font-weight: 700;
-  margin-bottom: 20px;
-}
-header h2 {
-  font-size: 1rem;
-  color: #374151;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-header p {
-  font-size: 0.85rem;
-  color: #9ca3af;
-  margin-top: 5px;
-}
-
-/* Formulários */
-.form-padrao {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-.input-padrao {
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid #d1d5db;
-  font-size: 0.95rem;
-  font-family: 'Inter', sans-serif;
-  outline: none;
-  transition: all 0.2s ease;
-  background-color: #f9fafb;
-}
-.input-padrao:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  background-color: #ffffff;
-}
-
-/* Alternância de Login / Cadastro */
-.login-toggle {
-  margin-top: 25px;
-  text-align: center;
-  font-size: 0.85rem;
-  color: #6b7280;
-}
-.login-toggle span {
-  color: #4f46e5;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-/* Caixa de Resumo */
-.resumo-box {
-  background-color: #ffffff;
-  display: flex;
-  flex-direction: column;
-}
-.linha-resumo {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  font-size: 0.95rem;
-  color: #4b5563;
-}
-.linha-resumo span:first-child { font-weight: 500; }
-.valor-entrada { color: #10b981; font-weight: 600; }
-.valor-saida { color: #ef4444; font-weight: 600; }
-.valor-saldo { color: #4f46e5; font-size: 1.2rem; }
-
-hr {
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 15px 0;
-}
-.saldo {
-  font-size: 1.05rem;
-  color: #111827;
-  padding-bottom: 10px;
-}
-
-/* Botões Globais */
-button {
-  border: none;
-  border-radius: 12px;
-  padding: 14px 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-}
-button:disabled { opacity: 0.7; cursor: not-allowed; }
-
-.btn-secundario { background-color: #f3f4f6; color: #4b5563; margin-top: 10px; }
-.btn-secundario:hover { background-color: #e5e7eb; color: #111827; }
-
-.btn-entrada { background-color: #10b981; color: white; }
-.btn-entrada:hover:not(:disabled) { background-color: #059669; transform: translateY(-2px); }
-
-.btn-saida { background-color: #ef4444; color: white; }
-.btn-saida:hover:not(:disabled) { background-color: #dc2626; transform: translateY(-2px); }
-
-/* Área de ações do Resumo */
-.acoes-lancamento { margin-top: 35px; text-align: center; }
-.acoes-lancamento p { font-size: 0.8rem; color: #6b7280; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; }
-.botoes { display: flex; gap: 15px; }
-
-/* Menu Inferior (Navegação) */
-.menu-inferior {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: white;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-around;
-  padding: 10px 0;
-  box-shadow: 0 -4px 10px rgba(0,0,0,0.02);
-}
-.menu-inferior button {
-  background: transparent;
-  color: #9ca3af;
-  width: auto;
-  padding: 10px 15px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-.menu-inferior button:hover { color: #6b7280; background-color: #f9fafb; }
-.menu-inferior button.ativo { color: #4f46e5; background: #eef2ff; font-weight: 700; }
-
-@media (max-width: 350px) {
-  .botoes { flex-direction: column; }
-}
-
-/* TOASTS (Notificações Modernas) */
-.toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px; /* Para celular, você pode mudar right para left: 20px e width: calc(100% - 40px) */
-  z-index: 9999;
-  padding: 15px 25px;
-  border-radius: 12px;
-  color: white;
-  font-weight: 600;
-  font-size: 0.95rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, slideOut 0.3s ease 2.7s forwards;
-}
-
-@media (max-width: 500px) {
-  .toast-container {
-    left: 20px;
-    right: 20px;
-    text-align: center;
-  }
-}
-
-.toast-sucesso { background-color: #10b981; }
-.toast-erro { background-color: #ef4444; }
-
-@keyframes slideIn {
-  from { transform: translateY(-50px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes slideOut {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(-50px); opacity: 0; }
-}
-
-/* Telas e Configurações */
-.config-section h3 {
-  font-size: 1.05rem;
-  color: #374151;
-  margin-bottom: 15px;
-}
-
 /* ========================================================
    PADRÃO WEB RESPONSIVO (DESKTOP E MOBILE)
    ======================================================== */
 
+/* RESET E BASE */
 html, body, #root {
   margin: 0;
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background-color: #f3f4f6;
+  background-color: #f3f4f6; /* Fundo cinza claro universal */
   font-family: system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
 }
 
 *, *:before, *:after {
   box-sizing: border-box;
 }
 
+/* LAYOUT PRINCIPAL */
 .app-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%;
 }
 
 /* ==========================================
-   CABEÇALHO E NAVEGAÇÃO SUPERIOR
+   CABEÇALHO E NAVEGAÇÃO SUPERIOR (NAVBAR)
    ========================================== */
 .navbar {
   background-color: #ffffff;
   border-bottom: 1px solid #e5e7eb;
-  padding: 15px 20px;
+  padding: 0 20px;
+  height: 60px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -300,62 +44,74 @@ html, body, #root {
 
 .navbar-brand {
   font-weight: 800;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: #4f46e5;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.navbar-menu-desktop {
-  display: none; /* Escondido no celular */
+/* MENU DESKTOP */
+.nav-links-desktop {
+  display: none; /* Escondido no mobile */
 }
 
-.navbar-user {
-  display: none; /* Escondido no celular */
-}
-
-.btn-menu-mobile {
-  background: none;
-  border: none;
-  color: #4b5563;
+/* MENU MOBILE (SANDUÍCHE) */
+.btn-hamburguer {
+  background: none !important;
+  border: none !important;
+  padding: 8px !important;
   cursor: pointer;
-  display: flex;
+  color: #4b5563 !important;
+  display: flex; 
   align-items: center;
   justify-content: center;
-  padding: 5px;
+  height: auto !important; 
+  box-shadow: none !important;
 }
 
-.menu-mobile-dropdown {
-  position: absolute;
+.btn-hamburguer:hover, .btn-hamburguer:active {
+  transform: none !important;
+  filter: none !important;
+}
+
+.menu-mobile-overlay {
+  position: fixed;
   top: 60px;
   left: 0;
   width: 100%;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  height: calc(100vh - 60px);
+  background-color: rgba(255,255,255,0.98);
+  z-index: 999;
   display: flex;
   flex-direction: column;
-  padding: 10px 20px;
-  z-index: 999;
+  padding: 20px;
+  gap: 10px;
+  border-top: 1px solid #f3f4f6;
 }
 
-.menu-mobile-dropdown button {
-  background: none;
-  border: none;
-  padding: 15px 0;
+.menu-mobile-overlay button {
+  background: none !important;
+  border: none !important;
+  padding: 15px !important;
   text-align: left;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #4b5563;
-  border-bottom: 1px solid #f3f4f6;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  border-bottom: 1px solid #f3f4f6 !important;
+  border-radius: 0 !important; 
+  height: auto !important;
+  box-shadow: none !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
 }
 
-.menu-mobile-dropdown button:last-child {
-  border-bottom: none;
+.menu-mobile-overlay button:hover, .menu-mobile-overlay button:active {
+  transform: none !important;
+  filter: none !important;
 }
 
 /* ==========================================
@@ -363,31 +119,30 @@ html, body, #root {
    ========================================== */
 .conteudo-dinamico {
   flex: 1;
+  width: 100%;
+  max-width: 1200px; /* Largura máxima no PC */
+  margin: 0 auto;
+  padding: 20px 15px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
-  width: 100%;
 }
 
+/* TELAS (A CAIXA BRANCA DAS PÁGINAS) */
 .tela {
   width: 100%;
-  max-width: 800px; /* Largura agradável no PC */
-  background-color: transparent;
+  max-width: 800px;
+  background-color: #ffffff;
+  padding: 25px 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
   margin: 0 auto;
 }
 
-/* Telas com fundo branco e sombra (Resumo, Cadastros) */
-.tela-branca {
-  background-color: #ffffff;
-  padding: 25px;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-  border: 1px solid #e5e7eb;
-}
-
+/* Telas de login e auth */
 .auth-container {
   display: flex;
   justify-content: center;
@@ -406,77 +161,222 @@ html, body, #root {
   border: 1px solid #e5e7eb;
 }
 
-/* Evita o Zoom automático do iOS/Android em inputs */
-input, select, textarea {
-  font-size: 16px !important;
+/* ==========================================
+   FORMS E INPUTS
+   ========================================== */
+.form-padrao { 
+  width: 100%; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 15px; 
 }
+
+.input-padrao { 
+  width: 100%; 
+  padding: 12px; 
+  border-radius: 10px; 
+  border: 1px solid #d1d5db; 
+  font-size: 16px !important; /* Evita zoom automático no iOS/Android */
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.input-padrao:focus {
+  border-color: #4f46e5;
+}
+
+/* TOAST FIXO */
+.toast-container {
+  position: fixed;
+  top: 75px;
+  right: 20px;
+  z-index: 1001;
+  padding: 15px 25px;
+  border-radius: 12px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+.toast-sucesso { background-color: #10b981; }
+.toast-erro { background-color: #ef4444; }
 
 /* ==========================================
    COMPORTAMENTO PARA DESKTOP (PC/Mac)
    ========================================== */
 @media (min-width: 768px) {
-  .btn-menu-mobile {
-    display: none; /* Some com o ícone de sanduíche */
-  }
+  .btn-hamburguer { display: none !important; }
+  
+  .menu-mobile-overlay { display: none !important; }
 
-  .menu-mobile-dropdown {
-    display: none !important; /* Garante que o dropdown não apareça */
-  }
-
-  .navbar-menu-desktop {
+  .nav-links-desktop {
     display: flex;
-    gap: 15px;
+    gap: 10px;
+    align-items: center;
   }
 
-  .navbar-menu-desktop button {
-    background: none;
-    border: none;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #6b7280;
+  .nav-links-desktop button {
+    background: none !important;
+    border: none !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    color: #4b5563 !important;
     cursor: pointer;
-    padding: 8px 12px;
-    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     transition: all 0.2s;
+    height: auto !important;
+    box-shadow: none !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+  }
+
+  .nav-links-desktop button:hover { 
+    background-color: #f3f4f6 !important; 
+    transform: none !important;
+  }
+  
+  .nav-links-desktop button.ativo { 
+    color: #4f46e5 !important; 
+    background-color: #eef2ff !important; 
+  }
+
+  .navbar-user-info {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    padding-left: 15px;
+    border-left: 1px solid #e5e7eb;
+    margin-left: 10px;
   }
-
-  .navbar-menu-desktop button:hover {
-    background-color: #f3f4f6;
-    color: #4f46e5;
+  
+  .navbar-user-info button {
+    background-color: #fef2f2 !important;
+    color: #ef4444 !important;
+    border: 1px solid #fecaca !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
+    height: auto !important;
+    box-shadow: none !important;
+    text-transform: none !important;
   }
-
-  .navbar-menu-desktop button.ativo {
-    color: #4f46e5;
-    background-color: #eef2ff;
+  .navbar-user-info button:hover {
+    transform: none !important;
+    background-color: #fecaca !important;
   }
+}
 
-  .navbar-user {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
+/* ========================================================
+   ESTILIZAÇÃO MODERNA DOS BOTÕES (NOVO VISUAL)
+   ======================================================== */
 
-  .navbar-user span {
-    font-weight: 600;
-    color: #374151;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+/* 1. Base Comum para Todos os Botões Gerais */
+button {
+  border: none;
+  border-radius: 14px !important; /* Bordas mais arredondadas */
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out !important; /* Transição suave */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 20px !important;
+  height: 55px !important; /* Altura base agradável */
+  font-family: inherit;
+}
 
-  .navbar-user button {
-    background-color: #fef2f2;
-    color: #ef4444;
-    border: 1px solid #fecaca;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+/* 2. Feedback Visual Unificado (Hover e Active) */
+button:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px); /* Efeito Flutuar */
+}
+
+button:active {
+  transform: translateY(1px); /* Efeito Pressionar */
+  filter: brightness(0.95);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* 3. Botão de ENTRADA (Verde Vibrante) */
+.btn-entrada {
+  background-color: #10b981 !important; /* Emerald 500 */
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+.btn-entrada:hover {
+  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* 4. Botão de SAÍDA (Vermelho Vibrante) */
+.btn-saida {
+  background-color: #ef4444 !important; /* Red 500 */
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+}
+.btn-saida:hover {
+  box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* 5. Botões de SANGRIA / REFORÇO (Variações de Azul) */
+.btn-sangria {
+  background-color: #0ea5e9 !important; /* Sky 500 */
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3) !important;
+}
+.btn-sangria:hover {
+  box-shadow: 0 6px 15px rgba(14, 165, 233, 0.4) !important;
+}
+
+.btn-reforco {
+  background-color: #4f46e5 !important; /* Indigo 600 */
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3) !important;
+}
+.btn-reforco:hover {
+  box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4) !important;
+}
+
+/* 6. Botão SECUNDÁRIO / CANCELAR (Cinza Clean) */
+.btn-secundario {
+  background-color: #f3f4f6 !important; /* Gray 100 */
+  color: #4b5563 !important; /* Gray 600 */
+  border: 1px solid #e5e7eb !important; /* Gray 200 */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03) !important;
+}
+.btn-secundario:hover {
+  background-color: #e5e7eb !important;
+  color: #1f2937 !important;
+}
+
+/* 7. Estado Desabilitado (Loading) */
+button:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* ==========================================
+   GRID PARA BOTÕES DA TELA DO CAIXA
+   ========================================== */
+.grid-botoes-caixa {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Duas colunas */
+  gap: 15px; 
+  margin-top: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+@media (max-width: 400px) {
+  .grid-botoes-caixa {
+    grid-template-columns: 1fr; /* Em telas de celular muito estreitas, empilha os botões */
   }
 }
