@@ -9,8 +9,9 @@ export default function TelaUsuarios({ mostrarToast }) {
   const [telaAtual, setTelaAtual] = useState('lista');
   const [loading, setLoading] = useState(false);
 
+  // Adicionado o 'username' de volta ao estado inicial
   const estadoInicial = { 
-    id: null, nome: '', email: '', senha: '', tipo: 'caixa', 
+    id: null, nome: '', username: '', email: '', tipo: 'caixa', ativo: true,
     perm_produtos: false, perm_fornecedores: false, perm_categorias: false, perm_pagamentos: false 
   };
   const [form, setForm] = useState(estadoInicial);
@@ -21,77 +22,63 @@ export default function TelaUsuarios({ mostrarToast }) {
     const { data } = await supabase.from('usuarios').select('*').order('nome');
     if (data) setUsuarios(data);
   };
-  
- const salvarUsuario = async (e) => {
+
+  const salvarUsuario = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const dados = { ...form };
+    // Limpa o username (tira o @ se o adm digitar e remove espaços)
+    const cleanUsername = form.username.replace('@', '').toLowerCase().trim();
 
-    // Se for ADM, garantimos que as permissões extras sejam falsas (pois ele já tem tudo)
-    if (dados.tipo === 'adm') {
-      dados.perm_produtos = false; dados.perm_fornecedores = false; 
-      dados.perm_categorias = false; dados.perm_pagamentos = false;
-    }
+    const dadosSalvar = {
+      nome: form.nome.toUpperCase(),
+      username: cleanUsername,
+      email: form.email.toLowerCase().trim(),
+      tipo: form.tipo,
+      ativo: form.ativo,
+      // Se for ADM, as permissões extras vão zeradas pois ele já tem acesso a tudo
+      perm_produtos: form.tipo === 'adm' ? false : form.perm_produtos,
+      perm_fornecedores: form.tipo === 'adm' ? false : form.perm_fornecedores,
+      perm_categorias: form.tipo === 'adm' ? false : form.perm_categorias,
+      perm_pagamentos: form.tipo === 'adm' ? false : form.perm_pagamentos,
+    };
 
     if (form.id) {
-      // Lógica de Edição (Update)
-      const { error } = await supabase.from('usuarios').update({
-        nome: dados.nome,
-        tipo: dados.tipo,
-        perm_produtos: dados.perm_produtos,
-        perm_fornecedores: dados.perm_fornecedores,
-        perm_categorias: dados.perm_categorias,
-        perm_pagamentos: dados.perm_pagamentos
-      }).eq('id', form.id);
-
+      // ATUALIZAÇÃO
+      const { error } = await supabase.from('usuarios').update(dadosSalvar).eq('id', form.id);
       if (!error) { 
         mostrarToast('Usuário atualizado!'); 
         setTelaAtual('lista'); 
         carregarUsuarios(); 
       } else {
-        mostrarToast('Erro ao atualizar tabela.', 'erro');
+        mostrarToast('Erro ao atualizar usuário.', 'erro');
       }
     } else {
-      // Lógica de Novo Usuário (Cadastro)
+      // NOVO CADASTRO
+      const senhaPadrao = "123456"; 
       
-      // 1. Cria o usuário no Supabase AUTH
+      // 1. Cria no Auth
       const { data, error: authError } = await supabase.auth.signUp({ 
-        email: form.email, 
-        password: form.senha 
+        email: dadosSalvar.email, 
+        password: senhaPadrao 
       });
 
       if (authError) {
-        mostrarToast('Erro no Auth: ' + authError.message, 'erro');
-        setLoading(false);
-        return;
-      }
+          mostrarToast('Erro de Acesso: ' + authError.message, 'erro');
+      } else if (data.user) {
+          // 2. Grava na Tabela
+          const { error: dbError } = await supabase.from('usuarios').insert([{
+              ...dadosSalvar,
+              id: data.user.id
+          }]);
 
-      if (data.user) {
-        // 2. Prepara os dados para a TABELA 'usuarios'
-        // IMPORTANTE: id deve ser o mesmo do Auth e criamos um username automático
-        const dadosTabela = {
-          id: data.user.id, // Vincula com o Auth
-          nome: dados.nome,
-          email: dados.email,
-          username: dados.email.split('@')[0].toLowerCase(), // Pega o que vem antes do @ como login
-          tipo: dados.tipo,
-          perm_produtos: dados.perm_produtos,
-          perm_fornecedores: dados.perm_fornecedores,
-          perm_categorias: dados.perm_categorias,
-          perm_pagamentos: dados.perm_pagamentos
-        };
-
-        const { error: dbError } = await supabase.from('usuarios').insert([dadosTabela]);
-
-        if (dbError) {
-          console.error("Erro DB:", dbError);
-          mostrarToast('Erro ao gravar na tabela usuários.', 'erro');
-        } else {
-          mostrarToast('Usuário criado com sucesso!');
-          setTelaAtual('lista');
-          carregarUsuarios();
-        }
+          if (dbError) {
+              mostrarToast('Erro ao gravar perfil: Verifique se o Login já existe.', 'erro');
+          } else {
+              mostrarToast('Criado! Senha padrão: 123456', 'sucesso'); 
+              setTelaAtual('lista'); 
+              carregarUsuarios();
+          }
       }
     }
     setLoading(false);
@@ -99,13 +86,7 @@ export default function TelaUsuarios({ mostrarToast }) {
 
   const CheckPerm = ({ label, name }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-      <input 
-        type="checkbox" 
-        checked={form[name]} 
-        onChange={e => setForm({ ...form, [name]: e.target.checked })} 
-        id={name}
-        style={{ width: '18px', height: '18px' }}
-      />
+      <input type="checkbox" checked={form[name]} onChange={e => setForm({ ...form, [name]: e.target.checked })} id={name} style={{ transform: 'scale(1.2)' }} />
       <label htmlFor={name} style={{ fontSize: '0.9rem', color: '#374151', cursor: 'pointer' }}>{label}</label>
     </div>
   );
@@ -113,23 +94,31 @@ export default function TelaUsuarios({ mostrarToast }) {
   if (telaAtual === 'form') {
     return (
       <main className="tela">
-        <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><IconUser /> {form.id ? 'EDITAR' : 'NOVO'} USUÁRIO</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><IconUser /> {form.id ? 'GERENCIAR' : 'NOVO'} USUÁRIO</h2>
         <form onSubmit={salvarUsuario} className="form-padrao">
-          <input type="text" placeholder="Nome" value={form.nome} onChange={e => setForm({...form, nome: e.target.value.toUpperCase()})} className="input-padrao" required />
-          <input type="email" placeholder="E-mail" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="input-padrao" required disabled={!!form.id} />
-          {!form.id && <input type="password" placeholder="Senha" value={form.senha} onChange={e => setForm({...form, senha: e.target.value})} className="input-padrao" required />}
+          <input type="text" placeholder="Nome Completo" value={form.nome} onChange={e => setForm({...form, nome: e.target.value})} className="input-padrao" required />
           
-          <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#4b5563' }}>Tipo de Acesso</label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+             <input type="text" placeholder="Login (Ex: caixa01)" value={form.username} onChange={e => setForm({...form, username: e.target.value})} className="input-padrao" required />
+             <input type="email" placeholder="E-mail" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="input-padrao" required />
+          </div>
+
+          <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#4b5563' }}>Nível de Acesso</label>
           <select value={form.tipo} onChange={e => setForm({...form, tipo: e.target.value})} className="input-padrao">
             <option value="caixa">CAIXA (OPERADOR)</option>
             <option value="adm">ADMINISTRADOR (DONO)</option>
           </select>
 
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', backgroundColor: form.ativo ? '#f0fdf4' : '#fef2f2', borderRadius: '10px' }}>
+            <input type="checkbox" checked={form.ativo} onChange={e => setForm({...form, ativo: e.target.checked})} id="userAtivo" style={{ transform: 'scale(1.5)' }} />
+            <label htmlFor="userAtivo" style={{ fontSize: '0.9rem', fontWeight: 'bold', color: form.ativo ? '#166534' : '#991b1b' }}>
+                {form.ativo ? 'CONTA ATIVA' : 'CONTA DESATIVADA (Acesso Bloqueado)'}
+            </label>
+          </div>
+
           {form.tipo === 'caixa' && (
-            <div style={{ marginTop: '10px', padding: '15px', backgroundColor: '#f3f4f6', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>
-                <IconShield /> PERMISSÕES DO CAIXA
-              </label>
+            <div style={{ padding: '15px', backgroundColor: '#f3f4f6', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '6px' }}><IconShield /> PERMISSÕES DE TELA</label>
               <CheckPerm label="Gerenciar Produtos" name="perm_produtos" />
               <CheckPerm label="Gerenciar Fornecedores" name="perm_fornecedores" />
               <CheckPerm label="Gerenciar Categorias" name="perm_categorias" />
@@ -138,8 +127,8 @@ export default function TelaUsuarios({ mostrarToast }) {
           )}
 
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            <button type="button" onClick={() => setTelaAtual('lista')} className="btn-secundario">CANCELAR</button>
-            <button type="submit" className="btn-entrada" disabled={loading}>SALVAR</button>
+            <button type="button" onClick={() => setTelaAtual('lista')} className="btn-secundario" style={{ flex: 1 }}>VOLTAR</button>
+            <button type="submit" className="btn-entrada" style={{ flex: 2 }} disabled={loading}>SALVAR ALTERAÇÕES</button>
           </div>
         </form>
       </main>
@@ -148,32 +137,22 @@ export default function TelaUsuarios({ mostrarToast }) {
 
   return (
     <main className="tela">
-      <h2><IconUser /> USUÁRIOS</h2>
+      <h2><IconUser /> GESTÃO DE USUÁRIOS</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
         {usuarios.map(u => (
-          <div key={u.id} onClick={() => { setForm(u); setTelaAtual('form'); }} style={{ backgroundColor: '#f9fafb', padding: '15px', borderRadius: '12px', border: '1px solid #e5e7eb', cursor: 'pointer' }}>
+          <div key={u.id} onClick={() => { setForm(u); setTelaAtual('form'); }} style={{ backgroundColor: '#f9fafb', padding: '15px', borderRadius: '12px', border: '1px solid #e5e7eb', cursor: 'pointer', opacity: u.ativo ? 1 : 0.5 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <strong>{u.nome}</strong>
-              <span style={{ fontSize: '0.7rem', backgroundColor: u.tipo === 'adm' ? '#eef2ff' : '#f3f4f6', color: u.tipo === 'adm' ? '#4f46e5' : '#6b7280', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold' }}>
-                {u.tipo.toUpperCase()}
-              </span>
+              <strong>{u.nome} {!u.ativo && '(INATIVO)'}</strong>
+              <span style={{ fontSize: '0.7rem', backgroundColor: u.tipo === 'adm' ? '#eef2ff' : '#f3f4f6', color: u.tipo === 'adm' ? '#4f46e5' : '#6b7280', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold' }}>{u.tipo.toUpperCase()}</span>
             </div>
-            <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>{u.email}</p>
+            <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '5px' }}>Login: @{u.username} | {u.email}</p>
           </div>
         ))}
-        <button onClick={() => { setForm(estadoInicial); setTelaAtual('form'); }} className="btn-entrada">+ NOVO USUÁRIO</button>
+        <button onClick={() => { setForm(estadoInicial); setTelaAtual('form'); }} className="btn-entrada" style={{ marginTop: '10px' }}>+ NOVO USUÁRIO</button>
       </div>
     </main>
   );
 }
-
-
-
-
-
-
-
-
 
 // import React, { useState, useEffect } from 'react';
 // import { supabase } from '../supabaseClient';

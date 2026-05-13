@@ -65,4 +65,4 @@ export default function TelaPerfil({ perfil, mostrarToast }) {
       </form>
     </main>
   );
-}
+}   
