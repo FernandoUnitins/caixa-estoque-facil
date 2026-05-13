@@ -21,8 +21,10 @@ const IconHome = () => <svg width="20" height="20" fill="none" stroke="currentCo
 const IconCash = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>;
 const IconFolder = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>;
 const IconUser = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg>;
-const IconLogOut = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
 const IconLock = () => <svg width="48" height="48" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>;
+
+// Ajustado para receber tamanhos customizados no Modal
+const IconLogOut = ({ size = "18", color = "currentColor" }) => <svg width={size} height={size} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
 
 function App() {
   const [session, setSession] = useState(null);
@@ -35,6 +37,9 @@ function App() {
   const [valorAbertura, setValorAbertura] = useState('');
   const [loadingCaixa, setLoadingCaixa] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
+  
+  // Estado para controlar o modal de confirmação de saída
+  const [modalLogout, setModalLogout] = useState(false);
 
   const mostrarToast = (mensagem, tipo = 'sucesso') => {
     setToast({ visivel: true, mensagem, tipo });
@@ -83,17 +88,37 @@ function App() {
     setMenuAberto(false);
   };
 
+  const confirmarESair = async () => {
+    setModalLogout(false);
+    await supabase.auth.signOut();
+  };
+
   if (!session) return <div className="app-container auth-container"><TelaLogin mostrarToast={mostrarToast} /></div>;
   if (!perfil) return <div className="app-container" style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>Carregando...</div>;
 
-  // AJUSTE: O menu de cadastros agora aparece para todos (ADM e Caixas)
-  // A filtragem do que o caixa pode ver acontece dentro do componente TelaMenuCadastros
   const mostrarMenuCadastros = true; 
 
   return (
     <div className="app-container">
       {toast.visivel && <div className={`toast-container toast-${toast.tipo}`}>{toast.mensagem}</div>}
       
+      {/* MODAL DE CONFIRMAÇÃO DE LOGOUT (SISTEMA) */}
+      {modalLogout && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '16px', width: '90%', maxWidth: '350px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px', color: '#ef4444' }}>
+              <IconLogOut size="48" color="#ef4444" />
+            </div>
+            <h3 style={{ margin: '0 0 10px 0', color: '#374151', fontSize: '1.2rem' }}>Sair do Sistema</h3>
+            <p style={{ color: '#6b7280', marginBottom: '25px', fontSize: '0.95rem' }}>Tem certeza que deseja encerrar a sua sessão agora?</p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn-secundario" onClick={() => setModalLogout(false)} style={{ flex: 1, margin: 0 }}>CANCELAR</button>
+              <button className="btn-saida" onClick={confirmarESair} style={{ flex: 1, margin: 0 }}>SAIR</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="navbar">
         <div className="navbar-brand">
           CEF - Caixa & Estoque
@@ -105,14 +130,14 @@ function App() {
           )}
           <button onClick={() => navegarPara('caixa')} className={telaAtual === 'caixa' ? 'ativo' : ''}><IconCash /> Caixa</button>
           
-          {/* Ajustado para sempre mostrar o menu de hub/perfil */}
           {mostrarMenuCadastros && (
             <button onClick={() => navegarPara('cadastros')} className={telaAtual === 'cadastros' ? 'ativo' : ''}><IconFolder /> Cadastros</button>
           )}
 
           <div className="navbar-user-info">
             <span><IconUser /> {perfil.nome}</span>
-            <button onClick={() => supabase.auth.signOut()}><IconLogOut /> Sair</button>
+            {/* Dispara o Modal em vez de deslogar na hora */}
+            <button onClick={() => setModalLogout(true)}><IconLogOut /> Sair</button>
           </div>
         </nav>
 
@@ -125,7 +150,11 @@ function App() {
             {perfil.tipo === 'adm' && <button onClick={() => navegarPara('resumo')}><IconHome /> Início</button>}
             <button onClick={() => navegarPara('caixa')}><IconCash /> Caixa</button>
             {mostrarMenuCadastros && <button onClick={() => navegarPara('cadastros')}><IconFolder /> Cadastros e Perfil</button>}
-            <button onClick={() => supabase.auth.signOut()} style={{color: '#ef4444', borderTop: '1px dashed #eee', marginTop: '10px'}}><IconLogOut /> Sair do Sistema</button>
+            
+            {/* Dispara o Modal em vez de deslogar na hora */}
+            <button onClick={() => { setMenuAberto(false); setModalLogout(true); }} style={{color: '#ef4444', borderTop: '1px dashed #eee', marginTop: '10px'}}>
+              <IconLogOut /> Sair do Sistema
+            </button>
           </div>
         )}
       </header>
@@ -178,7 +207,6 @@ function App() {
   );
 }
 export default App;
-
 
 // import React, { useState, useEffect } from 'react';
 // import { supabase } from './supabaseClient';
