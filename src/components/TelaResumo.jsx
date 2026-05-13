@@ -307,7 +307,7 @@ export default function TelaResumo() {
   // VISUALIZAÇÃO: TELA RESUMO (INICIAL PADRÃO)
   // ==========================================
   return (
-    <main className="tela" style={{ display: 'flex', flexDirection: 'column', height: '90vh' }}>
+    <main className="tela" style={{ display: 'flex', flexDirection: 'column' }}>
       <header style={{ marginBottom: '20px' }}>
         <h1>Caixa & Estoque Fácil</h1>
         <h2 style={{ color: '#4f46e5' }}>RESUMO DO CAIXA</h2>

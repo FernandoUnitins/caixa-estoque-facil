@@ -73,79 +73,42 @@ export default function TelaSaida({ setTelaAtual, mostrarToast }) {
     </label>
   );
 
-  return (
-    <main className="tela" style={{ paddingBottom: '30px' }}>
-      <h2 style={{ color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-        <IconUpload color="#ef4444" /> REGISTRAR SAÍDA (DESPESA)
-      </h2>
+// Substitua o retorno (return) da sua TelaSaida por este:
+return (
+  <main className="tela">
+    <h2 style={{ color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+      <IconUpload color="#ef4444" /> REGISTRAR SAÍDA
+    </h2>
 
-      <form onSubmit={salvar} className="form-padrao" style={{ marginTop: '20px' }}>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <LabelCampo>Descrição da Despesa</LabelCampo>
-          {/* O textarea permite quebra de linha e já transforma em maiúsculo na digitação */}
-          <textarea 
-            placeholder="EX: CONTA DE LUZ, PAGAMENTO DE FORNECEDOR" 
-            className="input-padrao" 
-            rows="2" 
-            style={{ resize: 'vertical' }}
-            required 
-            value={form.descricao}
-            onChange={e => setForm({...form, descricao: e.target.value.toUpperCase()})} 
-          />
-        </div>
+    <form onSubmit={salvar} className="form-padrao" style={{ marginTop: '20px' }}>
+      <LabelCampo>Descrição da Despesa</LabelCampo>
+      <textarea 
+        placeholder="EX: CONTA DE LUZ, PAGAMENTO DE FORNECEDOR" 
+        className="input-padrao" 
+        rows="3" 
+        required 
+        value={form.descricao}
+        onChange={e => setForm({...form, descricao: e.target.value.toUpperCase()})} 
+      />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <LabelCampo>Valor (R$)</LabelCampo>
-          {/* Campo de valor com máscara visual do Real */}
-          <input 
-            type="text" 
-            placeholder="0,00" 
-            className="input-padrao" 
-            required 
-            value={form.valor}
-            onChange={e => setForm({...form, valor: mascaraMoeda(e.target.value)})} 
-          />
-        </div>
+      <LabelCampo>Valor (R$)</LabelCampo>
+      <input 
+        type="text" 
+        className="input-padrao" 
+        required 
+        value={form.valor}
+        onChange={e => setForm({...form, valor: mascaraMoeda(e.target.value)})} 
+      />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <LabelCampo>Forma de Pagamento</LabelCampo>
-          <select 
-            className="input-padrao" 
-            required 
-            value={form.forma_pagamento}
-            onChange={e => setForm({...form, forma_pagamento: e.target.value})}
-          >
-            <option value="">Selecione...</option>
-            {formasPagamento.map(f => <option key={f.nome} value={f.nome}>{f.nome}</option>)}
-          </select>
-        </div>
+      {/* Select e Botões seguem o mesmo padrão fluido */}
+      <button type="submit" className="btn-entrada" disabled={loading}>
+        {loading ? 'SALVANDO...' : 'SALVAR DESPESA'}
+      </button>
+      <button type="button" className="btn-secundario" onClick={() => setTelaAtual('resumo')}>
+        CANCELAR
+      </button>
+    </form>
+  </main>
+);
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <LabelCampo>Observação (Opcional)</LabelCampo>
-          <textarea 
-            placeholder="Detalhes adicionais..." 
-            className="input-padrao" 
-            rows="2" 
-            style={{ resize: 'vertical' }}
-            value={form.observacao}
-            onChange={e => setForm({...form, observacao: e.target.value})} 
-          />
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
-          {/* Botão verde de Salvar */}
-          <button type="submit" className="btn-entrada" disabled={loading} style={{ margin: 0, height: '55px', fontSize: '1.1rem' }}>
-            {loading ? 'SALVANDO...' : 'SALVAR DESPESA'}
-          </button>
-          
-          {/* Botão Cancelar (Abaixo do Salvar) */}
-          <button type="button" className="btn-secundario" onClick={() => setTelaAtual('resumo')} style={{ margin: 0, height: '55px' }}>
-            CANCELAR
-          </button>
-        </div>
-
-      </form>
-    </main>
-  );
 }

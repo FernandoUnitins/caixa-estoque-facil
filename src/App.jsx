@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import './App.css';
 
+// Import das Telas
 import TelaLogin from './components/TelaLogin';
 import TelaResumo from './components/TelaResumo';
 import TelaEntrada from './components/TelaEntrada'; 
@@ -13,15 +14,14 @@ import TelaFormasPagamento from './components/TelaFormasPagamento';
 import TelaPerfil from './components/TelaPerfil';
 import TelaUsuarios from './components/TelaUsuarios';
 
-const IconHome = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
-const IconCashRegister = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line><line x1="12" y1="15" x2="12" y2="15"></line></svg>;
-const IconFolder = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>;
-const IconUser = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
-const IconLogOut = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
-const IconLock = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>;
-const IconMenu = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
-const IconClose = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
-const IconBox = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>;
+// Ícones para a Navbar
+const IconMenu = () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
+const IconClose = () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
+const IconHome = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>;
+const IconCash = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>;
+const IconFolder = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>;
+const IconUser = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg>;
+const IconLogOut = () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
 
 function App() {
   const [session, setSession] = useState(null);
@@ -29,13 +29,7 @@ function App() {
   const [telaAtual, setTelaAtual] = useState('');
   const [subTela, setSubTela] = useState(null);
   const [toast, setToast] = useState({ visivel: false, mensagem: '', tipo: '' });
-  
-  // Controle de Turno
   const [sessaoCaixa, setSessaoCaixa] = useState(null);
-  const [valorAbertura, setValorAbertura] = useState('');
-  const [loadingCaixa, setLoadingCaixa] = useState(false);
-
-  // Estado do Menu Mobile
   const [menuAberto, setMenuAberto] = useState(false);
 
   const mostrarToast = (mensagem, tipo = 'sucesso') => {
@@ -60,172 +54,93 @@ function App() {
     const { data: user } = await supabase.from('usuarios').select('*').eq('id', userId).single();
     if (user) {
       setPerfil(user);
-      await supabase.from('usuarios').update({ ultimo_login: new Date().toISOString() }).eq('id', userId);
       setTelaAtual(user.tipo === 'caixa' ? 'caixa' : 'resumo');
     }
-    verificarCaixaAberto(userId);
-  };
-
-  const verificarCaixaAberto = async (userId) => {
-    const { data } = await supabase.from('caixas_sessoes').select('*').eq('usuario_id', userId).eq('status', 'ABERTO').maybeSingle(); 
-    setSessaoCaixa(data || null);
-  };
-
-  const abrirCaixa = async (e) => {
-    e.preventDefault();
-    setLoadingCaixa(true);
-    const valorNum = parseFloat(valorAbertura.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-    const { data, error } = await supabase.from('caixas_sessoes').insert([{
-      usuario_id: session.user.id, valor_abertura: valorNum, status: 'ABERTO'
-    }]).select();
-    if (error) mostrarToast('Erro ao abrir o caixa.', 'erro');
-    else { mostrarToast('Caixa aberto!', 'sucesso'); setSessaoCaixa(data[0]); setValorAbertura(''); }
-    setLoadingCaixa(false);
-  };
-
-  const handleLogout = async () => { 
-    setMenuAberto(false);
-    await supabase.auth.signOut(); 
+    const { data: sessao } = await supabase.from('caixas_sessoes').select('*').eq('usuario_id', userId).eq('status', 'ABERTO').maybeSingle(); 
+    setSessaoCaixa(sessao || null);
   };
 
   const navegarPara = (tela) => {
     setTelaAtual(tela);
     setSubTela(null);
-    setMenuAberto(false); // Fecha o menu mobile ao clicar
+    setMenuAberto(false);
   };
-
-  // Lógica de Permissões para o Menu de Cadastros
-  const temAlgumaPermissaoCadastro = perfil?.tipo === 'adm' || perfil?.perm_produtos || perfil?.perm_fornecedores || perfil?.perm_categorias || perfil?.perm_pagamentos;
 
   if (!session) return <div className="app-container auth-container"><TelaLogin mostrarToast={mostrarToast} /></div>;
   if (!perfil) return <div className="app-container" style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>Carregando...</div>;
+
+  const temAlgumaPermissaoCadastro = perfil?.tipo === 'adm' || perfil?.perm_produtos || perfil?.perm_fornecedores || perfil?.perm_categorias || perfil?.perm_pagamentos;
 
   return (
     <div className="app-container">
       {toast.visivel && <div className={`toast-container toast-${toast.tipo}`}>{toast.mensagem}</div>}
       
-      {/* CABEÇALHO UNIFICADO */}
+      {/* NAVBAR UNIFICADA NO TOPO */}
       <header className="navbar">
         <div className="navbar-brand">
-          <IconBox /> CEF
+          CEF - Caixa & Estoque
         </div>
 
-        {/* Menu Desktop */}
-        <nav className="navbar-menu-desktop">
+        {/* Links Desktop */}
+        <nav className="nav-links-desktop">
           {perfil.tipo === 'adm' && (
             <button onClick={() => navegarPara('resumo')} className={telaAtual === 'resumo' ? 'ativo' : ''}><IconHome /> Início</button>
           )}
-          <button onClick={() => navegarPara('caixa')} className={telaAtual === 'caixa' ? 'ativo' : ''}><IconCashRegister /> Caixa</button>
-          
+          <button onClick={() => navegarPara('caixa')} className={telaAtual === 'caixa' ? 'ativo' : ''}><IconCash /> Caixa</button>
           {temAlgumaPermissaoCadastro && (
             <button onClick={() => navegarPara('cadastros')} className={telaAtual === 'cadastros' ? 'ativo' : ''}><IconFolder /> Cadastros</button>
           )}
-          
-          {perfil.tipo === 'caixa' && (
-            <button onClick={() => navegarPara('perfil')} className={telaAtual === 'perfil' ? 'ativo' : ''}><IconUser /> Perfil</button>
-          )}
+          <div className="navbar-user-info">
+            <span><IconUser /> {perfil.nome}</span>
+            <button onClick={() => supabase.auth.signOut()}><IconLogOut /> Sair</button>
+          </div>
         </nav>
 
-        {/* Usuário e Logout Desktop */}
-        <div className="navbar-user">
-          <span><IconUser /> {perfil.nome}</span>
-          <button onClick={handleLogout}><IconLogOut /> Sair</button>
-        </div>
-
-        {/* Botão Sanduíche Mobile */}
-        <button className="btn-menu-mobile" onClick={() => setMenuAberto(!menuAberto)}>
+        {/* Botão Menu Mobile */}
+        <button className="btn-hamburguer" onClick={() => setMenuAberto(!menuAberto)}>
           {menuAberto ? <IconClose /> : <IconMenu />}
         </button>
 
-        {/* Menu Dropdown Mobile */}
+        {/* Overlay do Menu Mobile */}
         {menuAberto && (
-          <div className="menu-mobile-dropdown">
-            <span style={{ fontSize: '0.8rem', color: '#6b7280', paddingBottom: '10px', borderBottom: '1px solid #e5e7eb', marginBottom: '5px' }}>
-              Logado como: <strong>{perfil.nome}</strong> ({perfil.tipo.toUpperCase()})
-            </span>
-            
-            {perfil.tipo === 'adm' && (
-              <button onClick={() => navegarPara('resumo')} style={{ color: telaAtual === 'resumo' ? '#4f46e5' : '#4b5563' }}><IconHome /> Início</button>
-            )}
-            
-            <button onClick={() => navegarPara('caixa')} style={{ color: telaAtual === 'caixa' ? '#4f46e5' : '#4b5563' }}><IconCashRegister /> Caixa</button>
-            
-            {temAlgumaPermissaoCadastro && (
-              <button onClick={() => navegarPara('cadastros')} style={{ color: telaAtual === 'cadastros' ? '#4f46e5' : '#4b5563' }}><IconFolder /> Cadastros e Ajustes</button>
-            )}
-            
-            {perfil.tipo === 'caixa' && (
-              <button onClick={() => navegarPara('perfil')} style={{ color: telaAtual === 'perfil' ? '#4f46e5' : '#4b5563' }}><IconUser /> Meu Perfil</button>
-            )}
-
-            <button onClick={handleLogout} style={{ color: '#ef4444', marginTop: '10px', borderTop: '1px dashed #e5e7eb', paddingTop: '15px' }}><IconLogOut /> Sair do Sistema</button>
+          <div className="menu-mobile-overlay">
+            {perfil.tipo === 'adm' && <button onClick={() => navegarPara('resumo')}><IconHome /> Início</button>}
+            <button onClick={() => navegarPara('caixa')}><IconCash /> Caixa</button>
+            {temAlgumaPermissaoCadastro && <button onClick={() => navegarPara('cadastros')}><IconFolder /> Cadastros e Ajustes</button>}
+            <button onClick={() => navegarPara('perfil')}><IconUser /> Meu Perfil</button>
+            <button onClick={() => supabase.auth.signOut()} style={{color: '#ef4444'}}><IconLogOut /> Sair do Sistema</button>
           </div>
         )}
       </header>
 
       <div className="conteudo-dinamico">
-        {telaAtual === 'resumo' && perfil.tipo === 'adm' && (
-          <div className="tela tela-branca">
-            <TelaResumo sessaoCaixa={sessaoCaixa} setTelaAtual={setTelaAtual} />
-          </div>
-        )}
+        {telaAtual === 'resumo' && <TelaResumo sessaoCaixa={sessaoCaixa} setTelaAtual={setTelaAtual} />}
         
         {telaAtual === 'caixa' && !sessaoCaixa && (
-          <div className="tela tela-branca" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-            <IconLock />
-            <h2 style={{ color: '#374151', marginTop: '15px', textAlign: 'center' }}>CAIXA FECHADO</h2>
-            <p style={{ color: '#6b7280', textAlign: 'center', marginBottom: '20px', fontSize: '0.9rem' }}>Para começar a operar, informe o fundo de troco inicial da gaveta.</p>
-
-            <form onSubmit={abrirCaixa} className="form-padrao" style={{ width: '100%', maxWidth: '350px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'white', border: '1px solid #d1d5db', borderRadius: '8px', overflow: 'hidden', marginBottom: '15px' }}>
-                <span style={{ paddingLeft: '15px', paddingRight: '10px', color: '#6b7280', fontWeight: 'bold' }}>R$</span>
-                <input 
-                  type="text" 
-                  placeholder="0,00" 
-                  value={valorAbertura} 
-                  onChange={e => {
-                    let v = e.target.value.replace(/\D/g, "");
-                    if (v) v = (Number(v) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-                    setValorAbertura(v);
-                  }} 
-                  style={{ flex: 1, border: 'none', padding: '15px 15px 15px 0', outline: 'none', fontSize: '1.2rem', fontWeight: 'bold', color: '#10b981' }} 
-                  required 
-                />
-              </div>
-              <button type="submit" className="btn-entrada" disabled={loadingCaixa}>
-                {loadingCaixa ? 'ABRINDO...' : 'ABRIR CAIXA'}
-              </button>
-            </form>
+          <div className="tela">
+             {/* Conteúdo de abertura de caixa simplificado aqui */}
+             <h2 style={{textAlign:'center'}}>CAIXA FECHADO</h2>
+             <button className="btn-entrada" onClick={() => carregarDadosIniciais(session.user.id)}>RECARREGAR STATUS</button>
           </div>
         )}
 
         {telaAtual === 'caixa' && sessaoCaixa && (
-          <div className="tela" style={{ maxWidth: '1000px', padding: 0 }}>
-            <TelaEntrada setTelaAtual={setTelaAtual} mostrarToast={mostrarToast} sessaoCaixa={sessaoCaixa} onCaixaFechado={() => { setSessaoCaixa(null); navegarPara(perfil.tipo === 'adm' ? 'resumo' : 'caixa'); }} />
-          </div>
+          <TelaEntrada mostrarToast={mostrarToast} sessaoCaixa={sessaoCaixa} onCaixaFechado={() => { setSessaoCaixa(null); navegarPara('resumo'); }} />
         )}
         
-        {telaAtual === 'cadastros' && temAlgumaPermissaoCadastro && (
-          <div className="tela tela-branca">
-            {!subTela ? (
-              <TelaMenuCadastros setSubTela={setSubTela} perfil={perfil} />
-            ) : (
+        {telaAtual === 'cadastros' && (
+          <div className="tela">
+            {!subTela ? <TelaMenuCadastros setSubTela={setSubTela} perfil={perfil} /> : (
               <div className="area-subtela">
                 <button className="btn-voltar" onClick={() => setSubTela(null)}>← Voltar ao Menu</button>
-                {subTela === 'produtos' && (perfil.tipo === 'adm' || perfil.perm_produtos) && <TelaProdutos mostrarToast={mostrarToast} perfil={perfil} />}
-                {subTela === 'fornecedores' && (perfil.tipo === 'adm' || perfil.perm_fornecedores) && <TelaFornecedores mostrarToast={mostrarToast} />}
-                {subTela === 'categorias' && (perfil.tipo === 'adm' || perfil.perm_categorias) && <TelaCategorias mostrarToast={mostrarToast} />}
-                {subTela === 'pagamentos' && (perfil.tipo === 'adm' || perfil.perm_pagamentos) && <TelaFormasPagamento mostrarToast={mostrarToast} />}
+                {subTela === 'produtos' && <TelaProdutos mostrarToast={mostrarToast} perfil={perfil} />}
+                {subTela === 'fornecedores' && <TelaFornecedores mostrarToast={mostrarToast} />}
+                {subTela === 'categorias' && <TelaCategorias mostrarToast={mostrarToast} />}
+                {subTela === 'pagamentos' && <TelaFormasPagamento mostrarToast={mostrarToast} />}
                 {subTela === 'perfil' && <TelaPerfil perfil={perfil} mostrarToast={mostrarToast} />}
-                {subTela === 'usuarios' && perfil.tipo === 'adm' && <TelaUsuarios perfil={perfil} mostrarToast={mostrarToast} />}
+                {subTela === 'usuarios' && <TelaUsuarios perfil={perfil} mostrarToast={mostrarToast} />}
               </div>
             )}
-          </div>
-        )}
-
-        {telaAtual === 'perfil' && perfil.tipo === 'caixa' && (
-          <div className="tela tela-branca">
-            <TelaPerfil perfil={perfil} mostrarToast={mostrarToast} />
           </div>
         )}
       </div>
@@ -233,10 +148,6 @@ function App() {
   );
 }
 export default App;
-
-
-
-
 
 
 

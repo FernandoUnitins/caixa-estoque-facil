@@ -425,7 +425,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
   }
 
   return (
-    <main className="tela" style={{ display: 'flex', flexDirection: 'column', height: '90vh', padding: '15px' }}>
+    <main className="tela" style={{ display: 'flex', flexDirection: 'column', padding: '15px' }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <h2 style={{ color: '#4b5563', fontSize: '1.2rem', margin: 0 }}>FRENTE DE CAIXA</h2>
