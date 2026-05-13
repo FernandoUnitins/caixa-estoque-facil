@@ -21,26 +21,78 @@ export default function TelaUsuarios({ mostrarToast }) {
     const { data } = await supabase.from('usuarios').select('*').order('nome');
     if (data) setUsuarios(data);
   };
-
-  const salvarUsuario = async (e) => {
+  
+ const salvarUsuario = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     const dados = { ...form };
+
+    // Se for ADM, garantimos que as permissões extras sejam falsas (pois ele já tem tudo)
     if (dados.tipo === 'adm') {
-        dados.perm_produtos = false; dados.perm_fornecedores = false; 
-        dados.perm_categorias = false; dados.perm_pagamentos = false;
+      dados.perm_produtos = false; dados.perm_fornecedores = false; 
+      dados.perm_categorias = false; dados.perm_pagamentos = false;
     }
 
     if (form.id) {
-      const { error } = await supabase.from('usuarios').update(dados).eq('id', form.id);
-      if (!error) { mostrarToast('Usuário atualizado!'); setTelaAtual('lista'); carregarUsuarios(); }
+      // Lógica de Edição (Update)
+      const { error } = await supabase.from('usuarios').update({
+        nome: dados.nome,
+        tipo: dados.tipo,
+        perm_produtos: dados.perm_produtos,
+        perm_fornecedores: dados.perm_fornecedores,
+        perm_categorias: dados.perm_categorias,
+        perm_pagamentos: dados.perm_pagamentos
+      }).eq('id', form.id);
+
+      if (!error) { 
+        mostrarToast('Usuário atualizado!'); 
+        setTelaAtual('lista'); 
+        carregarUsuarios(); 
+      } else {
+        mostrarToast('Erro ao atualizar tabela.', 'erro');
+      }
     } else {
-      const { error } = await supabase.auth.signUp({ email: form.email, password: form.senha });
-      if (!error) {
-          await supabase.from('usuarios').insert([dados]);
-          mostrarToast('Usuário criado!'); setTelaAtual('lista'); carregarUsuarios();
-      } else { mostrarToast('Erro ao criar acesso.', 'erro'); }
+      // Lógica de Novo Usuário (Cadastro)
+      
+      // 1. Cria o usuário no Supabase AUTH
+      const { data, error: authError } = await supabase.auth.signUp({ 
+        email: form.email, 
+        password: form.senha 
+      });
+
+      if (authError) {
+        mostrarToast('Erro no Auth: ' + authError.message, 'erro');
+        setLoading(false);
+        return;
+      }
+
+      if (data.user) {
+        // 2. Prepara os dados para a TABELA 'usuarios'
+        // IMPORTANTE: id deve ser o mesmo do Auth e criamos um username automático
+        const dadosTabela = {
+          id: data.user.id, // Vincula com o Auth
+          nome: dados.nome,
+          email: dados.email,
+          username: dados.email.split('@')[0].toLowerCase(), // Pega o que vem antes do @ como login
+          tipo: dados.tipo,
+          perm_produtos: dados.perm_produtos,
+          perm_fornecedores: dados.perm_fornecedores,
+          perm_categorias: dados.perm_categorias,
+          perm_pagamentos: dados.perm_pagamentos
+        };
+
+        const { error: dbError } = await supabase.from('usuarios').insert([dadosTabela]);
+
+        if (dbError) {
+          console.error("Erro DB:", dbError);
+          mostrarToast('Erro ao gravar na tabela usuários.', 'erro');
+        } else {
+          mostrarToast('Usuário criado com sucesso!');
+          setTelaAtual('lista');
+          carregarUsuarios();
+        }
+      }
     }
     setLoading(false);
   };
