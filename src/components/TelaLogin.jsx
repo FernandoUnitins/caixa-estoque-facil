@@ -14,10 +14,8 @@ export default function TelaLogin({ mostrarToast }) {
     setLoading(true);
 
     try {
-      // Limpa o input: remove espaços em branco, joga pra minúsculo e tira o "@" se a pessoa digitou
       const inputLimpo = usernameInput.replace('@', '').trim().toLowerCase();
 
-      // Busca super inteligente: aceita tanto o E-MAIL quanto o USERNAME
       const { data: userRecord, error: dbError } = await supabase
         .from('usuarios')
         .select('email, ativo')
@@ -36,7 +34,6 @@ export default function TelaLogin({ mostrarToast }) {
         return;
       }
 
-      // Login real no Supabase Auth usando o e-mail real vinculado
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: userRecord.email,
         password: senha
@@ -68,7 +65,7 @@ export default function TelaLogin({ mostrarToast }) {
     });
 
     if (error) {
-      mostrarToast('Erro ao enviar e-mail. Verifique se o endereço está correto.', 'erro');
+      mostrarToast('Erro ao enviar e-mail. Verifique o endereço está correto.', 'erro');
     } else {
       mostrarToast('Link de recuperação enviado para o seu e-mail!', 'sucesso');
       setModoRecuperacao(false);
@@ -77,22 +74,43 @@ export default function TelaLogin({ mostrarToast }) {
     setLoading(false);
   };
 
+  // Componente de Label interno para padronização
+  const Label = ({ htmlFor, children }) => (
+    <label 
+      htmlFor={htmlFor} 
+      style={{ 
+        fontSize: '0.85rem', 
+        fontWeight: '700', 
+        color: '#4b5563', 
+        marginBottom: '5px', 
+        display: 'block',
+        textAlign: 'left'
+      }}
+    >
+      {children}
+    </label>
+  );
+
   if (modoRecuperacao) {
     return (
       <div className="tela-login">
         <header>
           <h1>Recuperar Senha</h1>
-          <p>Digite seu e-mail cadastrado abaixo</p>
+          <p>Introduza o seu e-mail para receber o link</p>
         </header>
         <form onSubmit={handleRecuperarSenha} className="form-padrao">
-          <input 
-            type="email" 
-            placeholder="Seu e-mail de acesso" 
-            value={emailRecuperacao} 
-            onChange={(e) => setEmailRecuperacao(e.target.value)} 
-            className="input-padrao" 
-            required 
-          />
+          <div style={{ width: '100%' }}>
+            <Label htmlFor="email-recuperacao">E-mail de Acesso</Label>
+            <input 
+              id="email-recuperacao"
+              type="email" 
+              placeholder="exemplo@email.com" 
+              value={emailRecuperacao} 
+              onChange={(e) => setEmailRecuperacao(e.target.value)} 
+              className="input-padrao" 
+              required 
+            />
+          </div>
           <button type="submit" className="btn-entrada" disabled={loading}>
             {loading ? 'Enviando...' : 'ENVIAR LINK'}
           </button>
@@ -115,38 +133,55 @@ export default function TelaLogin({ mostrarToast }) {
   return (
     <div className="tela-login">
       <header>
-        <h1>Caixa & Estoque Fácil</h1>
-        <h2>Acesso ao Sistema</h2>
+        <center>
+
+          <h1>Caixa & Estoque Fácil</h1>
+          <h2>Acesso ao Sistema</h2>
+        </center>
       </header>
 
       <form onSubmit={handleLogin} className="form-padrao">
-        <input
-          type="text"
-          placeholder="E-mail ou Login (Ex: caixa01)"
-          value={usernameInput}
-          onChange={(e) => setUsernameInput(e.target.value)}
-          className="input-padrao"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Sua senha"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          className="input-padrao"
-          required
-        />
+        <div style={{ width: '100%' }}>
+          <Label htmlFor="usuario">Nome de usuário</Label>
+          <input
+            id="usuario"
+            type="text"
+            placeholder=""
+            value={usernameInput}
+            onChange={(e) => setUsernameInput(e.target.value)}
+            className="input-padrao"
+            required
+          />
+        </div>
+
+        <div style={{ width: '100%' }}>
+          <Label htmlFor="senha">Senha de acesso</Label>
+          <input
+            id="senha"
+            type="password"
+            placeholder=""
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            className="input-padrao"
+            required
+          />
+        </div>
+
         <button type="submit" className="btn-entrada" disabled={loading}>
           {loading ? 'Verificando...' : 'ENTRAR'}
         </button>
       </form>
 
-      <button 
+        <center>
+    <button 
         onClick={() => setModoRecuperacao(true)} 
         style={{ background: 'none', border: 'none', color: '#4f46e5', marginTop: '15px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
       >
         ESQUECI MINHA SENHA
       </button>
+
+        </center>
+  
     </div>
   );
 }
