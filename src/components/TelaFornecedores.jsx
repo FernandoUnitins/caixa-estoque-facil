@@ -239,7 +239,6 @@ export default function TelaFornecedores({ mostrarToast }) {
   if (telaAtual === 'form') {
     return (
       <main className="tela" style={{ paddingBottom: '30px', width: '100%', overflowX: 'hidden' }}>
-        // Título do Formulário
         <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#4b5563' }}>
   <IconTruck size="24" /> {form.id ? 'EDITAR FORNECEDOR' : 'NOVO FORNECEDOR'}
 </h2>
@@ -324,7 +323,6 @@ export default function TelaFornecedores({ mostrarToast }) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', backgroundColor: '#f9fafb', padding: '15px', borderRadius: '12px', border: '1px solid #e5e7eb', marginTop: '10px' }}>
-            // Dados do Vendedor
 <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '6px' }}>
   <IconUserTie size="18" /> DADOS DO VENDEDOR
 </label>
@@ -377,7 +375,6 @@ export default function TelaFornecedores({ mostrarToast }) {
   // ==========================================
   return (
     <main className="tela" style={{ paddingBottom: '30px' }}>
-      // Título da Listagem (no final do código)
 <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#4b5563' }}>
   <IconTruck size="24" /> FORNECEDORES
 </h2>

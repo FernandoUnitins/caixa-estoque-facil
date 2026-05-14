@@ -95,12 +95,14 @@ export default function TelaLogin({ mostrarToast }) {
     return (
       <div className="tela-login">
         <header>
-          <h1>Recuperar Senha</h1>
-          <p>Introduza o seu e-mail para receber o link</p>
+          <center>
+            <h1>Recuperar Senha</h1>
+            <p>Informe seu e-mail para receber o link</p>
+          </center>
         </header>
         <form onSubmit={handleRecuperarSenha} className="form-padrao">
           <div style={{ width: '100%' }}>
-            <Label htmlFor="email-recuperacao">E-mail de Acesso</Label>
+            <Label htmlFor="email-recuperacao">E-mail cadastrado</Label>
             <input 
               id="email-recuperacao"
               type="email" 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { Html5QrcodeScanner } from 'html5-qrcode';
+import { ScanBarcode } from 'lucide-react';
 
 // ==========================================
 // ÍCONES SVG NATIVOS (Zero Emojis)
@@ -8,7 +9,46 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 const IconSearch = ({ color = "currentColor" }) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
 const IconClose = ({ color = "currentColor" }) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
 const IconCamera = ({ color = "currentColor" }) => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>;
-const IconPlus = ({ color = "currentColor" }) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
+const IconBarcode = ({ color = "currentColor" }) => (
+  <svg
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="3" y1="5" x2="3" y2="19"></line>
+    <line x1="6" y1="5" x2="6" y2="19"></line>
+    <line x1="8" y1="5" x2="8" y2="19"></line>
+    <line x1="11" y1="5" x2="11" y2="19"></line>
+    <line x1="14" y1="5" x2="14" y2="19"></line>
+    <line x1="16" y1="5" x2="16" y2="19"></line>
+    <line x1="19" y1="5" x2="19" y2="19"></line>
+    <line x1="21" y1="5" x2="21" y2="19"></line>
+  </svg>
+);
+//const IconPlus = ({ color = "currentColor" }) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
+const IconPlus = ({ color = "currentColor", size = "20", strokeWidth = "3" }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="12" y1="5" x2="12" y2="19"></line>
+    <line x1="5" y1="12" x2="19" y2="12"></line>
+  </svg>
+);
+
+
+
 const IconMinus = ({ color = "currentColor" }) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 const IconTrash = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>;
 const IconBox = ({ color = "#9ca3af", size = "24" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>;
@@ -603,7 +643,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
           <input type="text" placeholder="Nome ou código..." value={termoBusca} onChange={handleBuscaAoVivo} className="input-padrao" style={{ width: '100%', margin: 0, paddingRight: '40px', height: '50px' }} />
           {termoBusca && <button onClick={() => {setTermoBusca(''); setResultadosBusca([]);}} style={{ position: 'absolute', right: '12px', background: 'none', border: 'none' }}><IconClose color="#9ca3af" /></button>}
         </div>
-        <button onClick={abrirLeitor} style={{ width: '50px', height: '50px', backgroundColor: '#374151', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none' }}><IconCamera color="white" /></button>
+        <button onClick={abrirLeitor} style={{ width: '100px', height: '100px', backgroundColor: '#374151', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none' }}><ScanBarcode size={22} color="white" /></button>
       </div>
 
       {resultadosBusca.length > 0 && (
@@ -614,8 +654,36 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
                 <strong style={{ fontSize: '0.85rem', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.descricao}</strong>
                 <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 'bold' }}>R$ {formatarMoedaExibicao(p.preco)} | Estq: {p.estoque}</span>
               </div>
-              <button onClick={() => adicionarAoCarrinho(p)} style={{ backgroundColor: '#10b981', color: 'white', border: 'none', width: '38px', height: '38px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><IconPlus color="white" /></button>
-            </div>
+              
+<button 
+  onClick={() => adicionarAoCarrinho(p)} 
+  style={{ 
+    backgroundColor: '#10b981',
+    border: 'none',
+    width: '38px',
+    height: '38px',
+    borderRadius: '8px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0
+  }}
+>
+  <span
+    style={{
+      color: 'white',
+      fontSize: '26px',
+      fontWeight: 'bold',
+      lineHeight: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: '-2px'
+    }}
+  >
+    +
+  </span>
+</button>            </div>
           ))}
         </div>
       )}
@@ -658,7 +726,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
         <Overlay>
           <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '20px', width: '90%', maxWidth: '350px', textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}><IconTrash color="#ef4444" size="40" /></div>
-            <h3>Remover Item?</h3>
+            <h3>Deseja realmente remover este item?</h3>
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={() => setModalRemover(null)} className="btn-secundario" style={{ flex: 1, margin: 0 }}>NÃO</button>
               <button onClick={() => { const c = [...carrinho]; c.splice(modalRemover, 1); setCarrinho(c); setModalRemover(null); }} className="btn-entrada" style={{ flex: 1, margin: 0, backgroundColor: '#ef4444' }}>SIM</button>

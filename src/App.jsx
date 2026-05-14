@@ -13,6 +13,10 @@ import TelaFornecedores from './components/TelaFornecedores';
 import TelaFormasPagamento from './components/TelaFormasPagamento';
 import TelaPerfil from './components/TelaPerfil';
 import TelaUsuarios from './components/TelaUsuarios';
+import { House } from 'lucide-react';
+import { FolderPen } from 'lucide-react';
+
+
 
 // Ícones para a Navbar
 const IconMenu = () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
@@ -126,12 +130,12 @@ function App() {
 
         <nav className="nav-links-desktop">
           {perfil.tipo === 'adm' && (
-            <button onClick={() => navegarPara('resumo')} className={telaAtual === 'resumo' ? 'ativo' : ''}><IconHome /> Início</button>
+            <button onClick={() => navegarPara('resumo')} className={telaAtual === 'resumo' ? 'ativo' : ''}><House /> Início</button>
           )}
           <button onClick={() => navegarPara('caixa')} className={telaAtual === 'caixa' ? 'ativo' : ''}><IconCash /> Caixa</button>
           
           {mostrarMenuCadastros && (
-            <button onClick={() => navegarPara('cadastros')} className={telaAtual === 'cadastros' ? 'ativo' : ''}><IconFolder /> Cadastros</button>
+            <button onClick={() => navegarPara('cadastros')} className={telaAtual === 'cadastros' ? 'ativo' : ''}><FolderPen /> Cadastros</button>
           )}
 
           <div className="navbar-user-info">

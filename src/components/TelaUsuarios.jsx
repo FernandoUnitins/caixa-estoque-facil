@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 
 const IconUser = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
 const IconShield = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>;
+import { IdCardLanyard } from 'lucide-react';
 
 export default function TelaUsuarios({ mostrarToast }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -137,7 +138,7 @@ export default function TelaUsuarios({ mostrarToast }) {
 
   return (
     <main className="tela">
-      <h2><IconUser /> GESTÃO DE USUÁRIOS</h2>
+      <h2><IdCardLanyard strokeWidth="1px" width="40" height="40" /> GESTÃO DE USUÁRIOS</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
         {usuarios.map(u => (
           <div key={u.id} onClick={() => { setForm(u); setTelaAtual('form'); }} style={{ backgroundColor: '#f9fafb', padding: '15px', borderRadius: '12px', border: '1px solid #e5e7eb', cursor: 'pointer', opacity: u.ativo ? 1 : 0.5 }}>

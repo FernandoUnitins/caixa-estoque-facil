@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Html5QrcodeScanner } from 'html5-qrcode';
+import { PackageSearch } from 'lucide-react';
+
 
 // ==========================================
 // ÍCONES SVG COM CORES FORÇADAS E CUSTOMIZÁVEIS
@@ -483,7 +485,7 @@ export default function TelaProdutos({ mostrarToast, perfil }) { // <-- Perfil r
   return (
     <main className="tela" style={{ paddingBottom: '30px' }}>
       <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#4b5563' }}>
-        <IconBox size="24" /> PRODUTOS
+        <PackageSearch size="48" strokeWidth="0.75px" /> PRODUTOS
       </h2>
 
       {/* ÁREA DE BUSCA */}

@@ -1,6 +1,12 @@
 import React from 'react';
 
 // ÍCONES SVG
+import { PackageSearch } from 'lucide-react';
+import { Factory } from 'lucide-react';
+import { IdCardLanyard } from 'lucide-react';
+
+
+
 const IconBox = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>;
 const IconTruck = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>;
 const IconTag = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>;
@@ -20,13 +26,13 @@ export default function TelaMenuCadastros({ setSubTela, perfil }) {
         
         {(isAdm || perfil?.perm_produtos) && (
           <button className="btn-secundario" onClick={() => setSubTela('produtos')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: 0 }}>
-            <IconBox /> PRODUTOS
+            <PackageSearch /> PRODUTOS
           </button>
         )}
         
         {(isAdm || perfil?.perm_fornecedores) && (
           <button className="btn-secundario" onClick={() => setSubTela('fornecedores')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: 0 }}>
-            <IconTruck /> FORNECEDORES
+            <Factory /> FORNECEDORES
           </button>
         )}
 
@@ -48,7 +54,7 @@ export default function TelaMenuCadastros({ setSubTela, perfil }) {
         
         {isAdm && (
           <button className="btn-secundario" onClick={() => setSubTela('usuarios')} style={{ border: '1px solid #4f46e5', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: 0, marginTop: '10px' }}>
-            <IconUsers /> GESTÃO DE FUNCIONÁRIOS
+            <IdCardLanyard /> GESTÃO DE FUNCIONÁRIOS
           </button>
         )}
 
