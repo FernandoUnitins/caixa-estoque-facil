@@ -97,8 +97,16 @@ function App() {
     await supabase.auth.signOut();
   };
 
-  if (!session) return <div className="app-container auth-container"><TelaLogin mostrarToast={mostrarToast} /></div>;
-  if (!perfil) return <div className="app-container" style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>Carregando...</div>;
+if (!session) {
+    return (
+      <div className="app-container auth-container">
+        {/* A LINHA ABAIXO É A MÁGICA QUE FAZ O AVISO APARECER NA TELA DE LOGIN */}
+        {toast.visivel && <div className={`toast-container toast-${toast.tipo}`}>{toast.mensagem}</div>}
+        <TelaLogin mostrarToast={mostrarToast} />
+      </div>
+    );
+  }
+    if (!perfil) return <div className="app-container" style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>Carregando...</div>;
 
   const mostrarMenuCadastros = true; 
 

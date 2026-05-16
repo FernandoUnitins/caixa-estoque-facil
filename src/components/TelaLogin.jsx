@@ -16,62 +16,78 @@ export default function TelaLogin({ mostrarToast }) {
     try {
       const inputLimpo = usernameInput.replace('@', '').trim().toLowerCase();
 
+      // Busca o usuário pelo e-mail ou username
       const { data: userRecord, error: dbError } = await supabase
         .from('usuarios')
         .select('email, ativo')
         .or(`username.eq.${inputLimpo},email.eq.${inputLimpo}`)
         .maybeSingle();
 
+      // Se não encontrar o usuário, exibe a mensagem de erro genérica (Segurança)
       if (dbError || !userRecord) {
-        mostrarToast('Usuário ou E-mail não encontrado no sistema.', 'erro');
+        mostrarToast('Usuário ou senha incorreta.', 'erro');
         setLoading(false);
         return;
       }
 
+      // Trava de segurança para contas inativas
       if (userRecord.ativo === false) {
         mostrarToast('Sua conta foi desativada pelo administrador.', 'erro');
         setLoading(false);
         return;
       }
 
+      // Tenta fazer o login real no Supabase Auth
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: userRecord.email,
         password: senha
       });
 
+      // Se a senha estiver errada, exibe a MESMA mensagem de erro genérica
       if (authError) {
-         if (authError.message.includes('Invalid login credentials')) {
-            mostrarToast('Senha incorreta! Tente novamente.', 'erro');
-         } else {
-            mostrarToast(`Erro: ${authError.message}`, 'erro');
-         }
+        mostrarToast('Usuário ou senha incorreta.', 'erro');
+        setLoading(false);
       } else {
-         mostrarToast('Bem-vindo!', 'sucesso');
+        mostrarToast('Bem-vindo ao sistema!', 'sucesso');
       }
       
     } catch (err) {
-      mostrarToast('Erro de comunicação com o servidor.', 'erro');
-    } finally {
+      console.error('Erro no login:', err);
+      mostrarToast('Erro de comunicação com o servidor. Tente novamente.', 'erro');
       setLoading(false);
     }
   };
 
   const handleRecuperarSenha = async (e) => {
     e.preventDefault();
+    
+    if (!emailRecuperacao || !emailRecuperacao.includes('@')) {
+      mostrarToast('Por favor, informe um e-mail válido.', 'erro');
+      return;
+    }
+    
     setLoading(true);
     
-    const { error } = await supabase.auth.resetPasswordForEmail(emailRecuperacao, {
-      redirectTo: window.location.origin, 
-    });
+    try {
+      // Dispara o e-mail oficial de recuperação do Supabase
+      const { error } = await supabase.auth.resetPasswordForEmail(emailRecuperacao, {
+        redirectTo: window.location.origin, 
+      });
 
-    if (error) {
-      mostrarToast('Erro ao enviar e-mail. Verifique o endereço está correto.', 'erro');
-    } else {
-      mostrarToast('Link de recuperação enviado para o seu e-mail!', 'sucesso');
-      setModoRecuperacao(false);
-      setEmailRecuperacao(''); 
+      if (error) {
+        console.error('Erro na recuperação:', error);
+        mostrarToast('Erro ao enviar link. Verifique se o e-mail está correto.', 'erro');
+      } else {
+        mostrarToast('Link de recuperação enviado para o seu e-mail!', 'sucesso');
+        setModoRecuperacao(false);
+        setEmailRecuperacao(''); 
+      }
+    } catch (err) {
+      console.error('Erro ao recuperar senha:', err);
+      mostrarToast('Erro ao processar solicitação. Tente novamente.', 'erro');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   // Componente de Label interno para padronização
@@ -124,6 +140,7 @@ export default function TelaLogin({ mostrarToast }) {
               setEmailRecuperacao(''); 
             }} 
             className="btn-secundario"
+            disabled={loading}
           >
             VOLTAR AO LOGIN
           </button>
@@ -136,7 +153,6 @@ export default function TelaLogin({ mostrarToast }) {
     <div className="tela-login">
       <header>
         <center>
-
           <h1>Caixa & Estoque Fácil</h1>
           <h2>Acesso ao Sistema</h2>
         </center>
@@ -144,11 +160,11 @@ export default function TelaLogin({ mostrarToast }) {
 
       <form onSubmit={handleLogin} className="form-padrao">
         <div style={{ width: '100%' }}>
-          <Label htmlFor="usuario">Nome de usuário</Label>
+          <Label htmlFor="usuario">Nome de usuário ou E-mail</Label>
           <input
             id="usuario"
             type="text"
-            placeholder=""
+            placeholder="Ex: caixa01"
             value={usernameInput}
             onChange={(e) => setUsernameInput(e.target.value)}
             className="input-padrao"
@@ -161,7 +177,7 @@ export default function TelaLogin({ mostrarToast }) {
           <input
             id="senha"
             type="password"
-            placeholder=""
+            placeholder="Sua senha"
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
             className="input-padrao"
@@ -174,15 +190,23 @@ export default function TelaLogin({ mostrarToast }) {
         </button>
       </form>
 
-        <center>
-    <button 
-        onClick={() => setModoRecuperacao(true)} 
-        style={{ background: 'none', border: 'none', color: '#4f46e5', marginTop: '15px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}
-      >
-        ESQUECI MINHA SENHA
-      </button>
-
-        </center>
+      <center>
+        <button 
+          onClick={() => setModoRecuperacao(true)} 
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            color: '#4f46e5', 
+            marginTop: '15px', 
+            cursor: 'pointer', 
+            fontWeight: 'bold', 
+            fontSize: '0.85rem' 
+          }}
+          disabled={loading}
+        >
+          ESQUECI MINHA SENHA
+        </button>
+      </center>
   
     </div>
   );
