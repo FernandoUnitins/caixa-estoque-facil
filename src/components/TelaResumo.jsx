@@ -9,7 +9,6 @@ const IconCalendar = ({ color = "currentColor", size = "20" }) => <svg width={si
 const IconArrowLeft = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>;
 const IconClose = ({ color = "currentColor", size = "24" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
 const IconReceipt = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 2v20l2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2V2l-2 2-2-2-2 2-2-2-2 2-2-2-2 2z"></path><line x1="16" y1="8" x2="8" y2="8"></line><line x1="16" y1="12" x2="8" y2="12"></line><line x1="10" y1="16" x2="8" y2="16"></line></svg>;
-// Novos Ícones para o Resumo
 const IconTrendingUp = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>;
 const IconTrendingDown = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>;
 const IconWallet = ({ color = "currentColor", size = "24" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>;
@@ -23,9 +22,13 @@ export default function TelaResumo() {
   const [loading, setLoading] = useState(false);
 
   // Estados para o Histórico Filtrado
-  const dataHoje = new Date().toLocaleDateString('en-CA'); // Pega 'YYYY-MM-DD'
+  const dataHoje = new Date().toLocaleDateString('en-CA'); 
   const [dataFiltro, setDataFiltro] = useState(dataHoje);
   const [lancamentos, setLancamentos] = useState([]);
+  
+  // Novos estados para filtro e ordenação
+  const [filtroTipo, setFiltroTipo] = useState('TODOS');
+  const [ordenacao, setOrdenacao] = useState('data_desc');
   
   // Estados para o Modal de Detalhes
   const [modalDetalhes, setModalDetalhes] = useState(null);
@@ -40,9 +43,6 @@ export default function TelaResumo() {
     }
   }, [telaAtual, dataFiltro]);
 
-  // ==========================================
-  // BUSCA DADOS DO DIA (TELA INICIAL)
-  // ==========================================
   async function carregarResumoHoje() {
     setLoading(true);
     const start = new Date(`${dataHoje}T00:00:00-03:00`).toISOString();
@@ -73,28 +73,27 @@ export default function TelaResumo() {
     setLoading(false);
   }
 
-  // ==========================================
-  // BUSCA DADOS DO HISTÓRICO (FILTRO POR DATA)
-  // ==========================================
   async function carregarHistorico(dataEscolhida) {
     setLoading(true);
     const start = new Date(`${dataEscolhida}T00:00:00-03:00`).toISOString();
     const end = new Date(`${dataEscolhida}T23:59:59.999-03:00`).toISOString();
 
+    // Faz um join inteligente para pegar o nome do usuário que abriu o caixa vinculado ao lançamento
     const { data, error } = await supabase
       .from('lancamentos')
-      .select('*')
+      .select(`
+        *,
+        caixas_sessoes (
+          usuarios ( nome )
+        )
+      `)
       .gte('data_hora', start)
-      .lte('data_hora', end)
-      .order('data_hora', { ascending: false });
+      .lte('data_hora', end);
 
     if (!error && data) setLancamentos(data);
     setLoading(false);
   }
 
-  // ==========================================
-  // BUSCA ITENS DA VENDA PARA O MODAL
-  // ==========================================
   async function abrirDetalhes(lanc) {
     setModalDetalhes(lanc);
     setItensDetalhe([]);
@@ -118,7 +117,26 @@ export default function TelaResumo() {
   const formatarHora = (dataString) => new Date(dataString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const saldoHoje = entradas - saidas;
 
-  // Calculos do Filtro Ativo
+  // ==========================================
+  // FILTRAGEM E ORDENAÇÃO
+  // ==========================================
+  const lancamentosFiltrados = lancamentos.filter(l => {
+    if (filtroTipo === 'ENTRADA') return l.tipo === 'ENTRADA' || l.tipo === 'REFORCO';
+    if (filtroTipo === 'SAIDA') return l.tipo === 'SAIDA' || l.tipo === 'SANGRIA';
+    return true;
+  }).sort((a, b) => {
+    if (ordenacao === 'data_desc') return new Date(b.data_hora) - new Date(a.data_hora);
+    if (ordenacao === 'data_asc') return new Date(a.data_hora) - new Date(b.data_hora);
+    if (ordenacao === 'valor_desc') return Number(b.valor) - Number(a.valor);
+    if (ordenacao === 'valor_asc') return Number(a.valor) - Number(b.valor);
+    if (ordenacao === 'usuario') {
+      const nomeA = a.caixas_sessoes?.usuarios?.nome || 'Z';
+      const nomeB = b.caixas_sessoes?.usuarios?.nome || 'Z';
+      return nomeA.localeCompare(nomeB);
+    }
+    return 0;
+  });
+
   const totalEntradasFiltro = lancamentos.filter(l => l.tipo === 'ENTRADA' || l.tipo === 'REFORCO').reduce((acc, curr) => acc + Number(curr.valor), 0);
   const totalSaidasFiltro = lancamentos.filter(l => l.tipo === 'SAIDA' || l.tipo === 'SANGRIA').reduce((acc, curr) => acc + Number(curr.valor), 0);
 
@@ -163,6 +181,11 @@ export default function TelaResumo() {
                   <strong style={{ color: '#374151', fontSize: '0.85rem' }}>{modalDetalhes.forma_pagamento || 'Não info.'}</strong>
                 </div>
 
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>Operador:</span>
+                  <strong style={{ color: '#374151', fontSize: '0.85rem' }}>{modalDetalhes.caixas_sessoes?.usuarios?.nome || 'Desconhecido'}</strong>
+                </div>
+
                 {modalDetalhes.descricao && (
                   <div style={{ marginBottom: '15px', backgroundColor: '#f9fafb', padding: '10px', borderRadius: '8px' }}>
                     <span style={{ color: '#6b7280', fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Descrição / Origem:</span>
@@ -170,7 +193,6 @@ export default function TelaResumo() {
                   </div>
                 )}
 
-                {/* SESSÃO DE ITENS VENDIDOS */}
                 {modalDetalhes.tipo === 'ENTRADA' && (
                   <div style={{ marginTop: '20px' }}>
                     <h4 style={{ fontSize: '0.9rem', color: '#4b5563', borderBottom: '1px solid #e5e7eb', paddingBottom: '5px', marginBottom: '10px' }}>PRODUTOS DA VENDA</h4>
@@ -231,14 +253,14 @@ export default function TelaResumo() {
 
         {/* CABEÇALHO DO HISTÓRICO */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-          <button onClick={() => setTelaAtual('resumo')} style={{ background: 'transparent', border: 'none', color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold' }}>
+          <button onClick={() => setTelaAtual('resumo')} style={{ background: 'transparent', border: 'none', color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold', padding: 0 }}>
             <IconArrowLeft /> VOLTAR
           </button>
           <h2 style={{ fontSize: '1.1rem', margin: 0, color: '#374151' }}>HISTÓRICO</h2>
         </div>
 
         {/* FILTRO DE DATA */}
-        <div style={{ backgroundColor: '#f9fafb', padding: '15px', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '20px' }}>
+        <div style={{ backgroundColor: '#f9fafb', padding: '15px', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '15px' }}>
           <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
             <IconCalendar size="16" /> Escolha a Data
           </label>
@@ -263,15 +285,35 @@ export default function TelaResumo() {
           </div>
         </div>
 
+        {/* CONTROLES DE FILTRO E ORDENAÇÃO */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: '5px' }}>
+            <button onClick={() => setFiltroTipo('TODOS')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: filtroTipo === 'TODOS' ? '#4f46e5' : '#f3f4f6', color: filtroTipo === 'TODOS' ? 'white' : '#4b5563', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer' }}>TODOS</button>
+            <button onClick={() => setFiltroTipo('ENTRADA')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: filtroTipo === 'ENTRADA' ? '#10b981' : '#f3f4f6', color: filtroTipo === 'ENTRADA' ? 'white' : '#4b5563', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer' }}>ENTRADAS</button>
+            <button onClick={() => setFiltroTipo('SAIDA')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: filtroTipo === 'SAIDA' ? '#ef4444' : '#f3f4f6', color: filtroTipo === 'SAIDA' ? 'white' : '#4b5563', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer' }}>SAÍDAS</button>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f9fafb', padding: '10px 15px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#4b5563' }}>Ordenar por:</span>
+            <select value={ordenacao} onChange={e => setOrdenacao(e.target.value)} className="input-padrao" style={{ width: 'auto', padding: '6px 10px', fontSize: '0.8rem', margin: 0, minHeight: 'auto', border: '1px solid #d1d5db' }}>
+              <option value="data_desc">Ordem de Lançamento</option>
+              <option value="data_asc">Mais Antigos</option>
+              <option value="valor_desc">Maior Valor</option>
+              <option value="valor_asc">Menor Valor</option>
+              <option value="usuario">Nome do Usuário</option>
+            </select>
+          </div>
+        </div>
+
         {/* LISTA DE LANÇAMENTOS */}
         {loading ? (
           <p style={{ textAlign: 'center', color: '#6b7280' }}>Carregando...</p>
-        ) : lancamentos.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#9ca3af', marginTop: '30px' }}>Nenhum lançamento encontrado nesta data.</p>
+        ) : lancamentosFiltrados.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#9ca3af', marginTop: '30px' }}>Nenhum lançamento encontrado para este filtro.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <h3 style={{ fontSize: '0.9rem', color: '#4b5563', marginBottom: '5px' }}>Transações:</h3>
-            {lancamentos.map(lanc => (
+            {lancamentosFiltrados.map(lanc => (
               <div 
                 key={lanc.id} 
                 onClick={() => abrirDetalhes(lanc)}
@@ -288,11 +330,19 @@ export default function TelaResumo() {
                     </span>
                     <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{formatarHora(lanc.data_hora)}</span>
                   </div>
+                  
                   <strong style={{ display: 'block', fontSize: '0.9rem', color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {lanc.descricao}
                   </strong>
-                  <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{lanc.forma_pagamento || 'N/A'}</span>
+                  
+                  {/* Linha que mostra o método de pagamento e o nome do Usuário */}
+                  <span style={{ fontSize: '0.75rem', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <span>{lanc.forma_pagamento || 'N/A'}</span>
+                    <span>•</span>
+                    <span style={{ color: '#4f46e5', fontWeight: '600' }}>Op: {lanc.caixas_sessoes?.usuarios?.nome || 'Desconhecido'}</span>
+                  </span>
                 </div>
+                
                 <strong style={{ color: (lanc.tipo === 'ENTRADA' || lanc.tipo === 'REFORCO') ? '#10b981' : '#ef4444', fontSize: '1.1rem', flexShrink: 0 }}>
                   {(lanc.tipo === 'ENTRADA' || lanc.tipo === 'REFORCO') ? '+' : '-'}{formatarMoeda(lanc.valor)}
                 </strong>
@@ -396,17 +446,23 @@ export default function TelaResumo() {
 
 
 
+
+
 // import React, { useState, useEffect } from 'react';
 // import { supabase } from '../supabaseClient';
 
 // // ==========================================
-// // ÍCONES SVG COM CORES FORÇADAS
+// // ÍCONES SVG MODERNOS (Estilo Financeiro)
 // // ==========================================
 // const IconList = ({ color = "currentColor", size = "24" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>;
 // const IconCalendar = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>;
 // const IconArrowLeft = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>;
 // const IconClose = ({ color = "currentColor", size = "24" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
-// const IconReceipt = ({ color = "currentColor", size = "24" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>;
+// const IconReceipt = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 2v20l2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2V2l-2 2-2-2-2 2-2-2-2 2-2-2-2 2z"></path><line x1="16" y1="8" x2="8" y2="8"></line><line x1="16" y1="12" x2="8" y2="12"></line><line x1="10" y1="16" x2="8" y2="16"></line></svg>;
+// // Novos Ícones para o Resumo
+// const IconTrendingUp = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>;
+// const IconTrendingDown = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>;
+// const IconWallet = ({ color = "currentColor", size = "24" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>;
 
 // export default function TelaResumo() {
 //   const [telaAtual, setTelaAtual] = useState('resumo'); // 'resumo' ou 'historico'
@@ -439,7 +495,6 @@ export default function TelaResumo() {
 //   // ==========================================
 //   async function carregarResumoHoje() {
 //     setLoading(true);
-//     // Converte a data de hoje para Início e Fim do dia no fuso do Brasil (-03:00)
 //     const start = new Date(`${dataHoje}T00:00:00-03:00`).toISOString();
 //     const end = new Date(`${dataHoje}T23:59:59.999-03:00`).toISOString();
 
@@ -459,8 +514,8 @@ export default function TelaResumo() {
 //     let totalSaidas = 0;
 
 //     data.forEach(lanc => {
-//       if (lanc.tipo === 'ENTRADA') totalEntradas += Number(lanc.valor);
-//       if (lanc.tipo === 'SAIDA') totalSaidas += Number(lanc.valor);
+//       if (lanc.tipo === 'ENTRADA' || lanc.tipo === 'REFORCO') totalEntradas += Number(lanc.valor);
+//       if (lanc.tipo === 'SAIDA' || lanc.tipo === 'SANGRIA') totalSaidas += Number(lanc.valor);
 //     });
 
 //     setEntradas(totalEntradas);
@@ -494,7 +549,6 @@ export default function TelaResumo() {
 //     setModalDetalhes(lanc);
 //     setItensDetalhe([]);
     
-//     // Se for uma entrada, tenta buscar os itens daquela venda
 //     if (lanc.tipo === 'ENTRADA') {
 //       setBuscandoItens(true);
 //       const { data, error } = await supabase
@@ -515,9 +569,8 @@ export default function TelaResumo() {
 //   const saldoHoje = entradas - saidas;
 
 //   // Calculos do Filtro Ativo
-//   const totalEntradasFiltro = lancamentos.filter(l => l.tipo === 'ENTRADA').reduce((acc, curr) => acc + Number(curr.valor), 0);
-//   const totalSaidasFiltro = lancamentos.filter(l => l.tipo === 'SAIDA').reduce((acc, curr) => acc + Number(curr.valor), 0);
-//   const saldoFiltro = totalEntradasFiltro - totalSaidasFiltro;
+//   const totalEntradasFiltro = lancamentos.filter(l => l.tipo === 'ENTRADA' || l.tipo === 'REFORCO').reduce((acc, curr) => acc + Number(curr.valor), 0);
+//   const totalSaidasFiltro = lancamentos.filter(l => l.tipo === 'SAIDA' || l.tipo === 'SANGRIA').reduce((acc, curr) => acc + Number(curr.valor), 0);
 
 //   const Overlay = ({ children }) => <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>{children}</div>;
 
@@ -551,7 +604,7 @@ export default function TelaResumo() {
 //                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
 //                   <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>Tipo:</span>
 //                   <strong style={{ color: modalDetalhes.tipo === 'ENTRADA' ? '#10b981' : '#ef4444', fontSize: '0.85rem' }}>
-//                     {modalDetalhes.tipo === 'ENTRADA' ? 'ENTRADA (Venda)' : 'SAÍDA (Despesa)'}
+//                     {modalDetalhes.tipo}
 //                   </strong>
 //                 </div>
 
@@ -680,7 +733,7 @@ export default function TelaResumo() {
 //               >
 //                 <div style={{ flex: 1, minWidth: 0, paddingRight: '10px' }}>
 //                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-//                     <span style={{ fontSize: '0.7rem', backgroundColor: lanc.tipo === 'ENTRADA' ? '#ecfdf5' : '#fef2f2', color: lanc.tipo === 'ENTRADA' ? '#10b981' : '#ef4444', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
+//                     <span style={{ fontSize: '0.7rem', backgroundColor: (lanc.tipo === 'ENTRADA' || lanc.tipo === 'REFORCO') ? '#ecfdf5' : '#fef2f2', color: (lanc.tipo === 'ENTRADA' || lanc.tipo === 'REFORCO') ? '#10b981' : '#ef4444', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
 //                       {lanc.tipo}
 //                     </span>
 //                     <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{formatarHora(lanc.data_hora)}</span>
@@ -690,8 +743,8 @@ export default function TelaResumo() {
 //                   </strong>
 //                   <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{lanc.forma_pagamento || 'N/A'}</span>
 //                 </div>
-//                 <strong style={{ color: lanc.tipo === 'ENTRADA' ? '#10b981' : '#ef4444', fontSize: '1.1rem', flexShrink: 0 }}>
-//                   {lanc.tipo === 'ENTRADA' ? '+' : '-'}{formatarMoeda(lanc.valor)}
+//                 <strong style={{ color: (lanc.tipo === 'ENTRADA' || lanc.tipo === 'REFORCO') ? '#10b981' : '#ef4444', fontSize: '1.1rem', flexShrink: 0 }}>
+//                   {(lanc.tipo === 'ENTRADA' || lanc.tipo === 'REFORCO') ? '+' : '-'}{formatarMoeda(lanc.valor)}
 //                 </strong>
 //               </div>
 //             ))}
@@ -706,43 +759,79 @@ export default function TelaResumo() {
 //   // ==========================================
 //   return (
 //     <main className="tela" style={{ display: 'flex', flexDirection: 'column' }}>
-//       <header style={{ marginBottom: '20px' }}>
-//         <h1>Caixa & Estoque Fácil</h1>
-//         <h2 style={{ color: '#4f46e5' }}>RESUMO DO CAIXA</h2>
-//         <p style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: 'bold' }}>HOJE - {new Date().toLocaleDateString('pt-BR')}</p>
+      
+//       {/* CABEÇALHO MODERNO */}
+//       <header style={{ marginBottom: '25px', textAlign: 'center' }}>
+//         <h2 style={{ color: '#374151', fontSize: '1.4rem', margin: '0 0 5px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+//           RESUMO DO CAIXA
+//         </h2>
+//         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#f3f4f6', padding: '4px 12px', borderRadius: '20px', color: '#6b7280', fontSize: '0.85rem', fontWeight: '600' }}>
+//           <IconCalendar size="14" /> HOJE • {new Date().toLocaleDateString('pt-BR')}
+//         </div>
 //       </header>
       
 //       {loading ? (
 //         <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#9ca3af' }}>Atualizando...</div>
 //       ) : (
-//         <div className="resumo-box" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-//           <div className="linha-resumo">
-//             <span style={{ fontWeight: 'bold', color: '#10b981' }}>+ ENTRADAS (HOJE)</span> 
-//             <span className="valor-entrada" style={{ fontSize: '1.3rem' }}>{formatarMoeda(entradas)}</span>
-//           </div>
-//           <div className="linha-resumo" style={{ marginTop: '15px' }}>
-//             <span style={{ fontWeight: 'bold', color: '#ef4444' }}>- SAÍDAS (HOJE)</span> 
-//             <span className="valor-saida" style={{ fontSize: '1.3rem' }}>{formatarMoeda(saidas)}</span>
+//         <div className="resumo-box" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          
+//           {/* CARDS DE ENTRADAS E SAÍDAS (LADO A LADO) */}
+//           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+            
+//             {/* Card Entrada */}
+//             <div style={{ backgroundColor: '#ecfdf5', padding: '20px 15px', borderRadius: '16px', border: '1px solid #a7f3d0', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 4px 6px rgba(16, 185, 129, 0.05)' }}>
+//                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#047857' }}>
+//                   <IconTrendingUp size="18" /> 
+//                   <span style={{ fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '0.5px' }}>ENTRADAS</span>
+//                </div>
+//                <strong style={{ fontSize: '1.4rem', color: '#10b981' }}>{formatarMoeda(entradas)}</strong>
+//             </div>
+
+//             {/* Card Saída */}
+//             <div style={{ backgroundColor: '#fef2f2', padding: '20px 15px', borderRadius: '16px', border: '1px solid #fecaca', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 4px 6px rgba(239, 68, 68, 0.05)' }}>
+//                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#b91c1c' }}>
+//                   <IconTrendingDown size="18" /> 
+//                   <span style={{ fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '0.5px' }}>SAÍDAS</span>
+//                </div>
+//                <strong style={{ fontSize: '1.4rem', color: '#ef4444' }}>{formatarMoeda(saidas)}</strong>
+//             </div>
+
 //           </div>
           
-//           <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px dashed #d1d5db' }} />
-          
-//           <div className="linha-resumo saldo">
-//             <strong style={{ fontSize: '1.2rem', color: '#374151' }}>SALDO DO DIA</strong> 
-//             <strong className="valor-saldo" style={{ fontSize: '1.8rem', color: saldoHoje >= 0 ? '#4f46e5' : '#ef4444' }}>
-//               {formatarMoeda(saldoHoje)}
-//             </strong>
+//           {/* CARD DE SALDO PRINCIPAL */}
+//           <div style={{ 
+//             backgroundColor: saldoHoje >= 0 ? '#4f46e5' : '#ef4444', 
+//             padding: '25px 20px', 
+//             borderRadius: '16px', 
+//             color: 'white', 
+//             display: 'flex', 
+//             flexDirection: 'column', 
+//             alignItems: 'center', 
+//             gap: '10px', 
+//             boxShadow: saldoHoje >= 0 ? '0 10px 20px rgba(79, 70, 229, 0.2)' : '0 10px 20px rgba(239, 68, 68, 0.2)',
+//             marginBottom: '10px',
+//             transition: 'all 0.3s ease'
+//           }}>
+//              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.9 }}>
+//                 <IconWallet size="22" /> 
+//                 <span style={{ fontSize: '0.9rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Saldo Líquido do Dia</span>
+//              </div>
+//              <strong style={{ fontSize: '2.4rem', fontWeight: '800', margin: '5px 0' }}>
+//                {formatarMoeda(saldoHoje)}
+//              </strong>
 //           </div>
+
 //         </div>
 //       )}
 
-//       <div style={{ marginTop: '20px', paddingBottom: '20px' }}>
+//       {/* BOTÃO DE NAVEGAÇÃO */}
+//       <div style={{ marginTop: '25px', paddingBottom: '10px' }}>
 //         <button 
 //           className="btn-secundario" 
 //           onClick={() => setTelaAtual('historico')}
-//           style={{ width: '100%', height: '60px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', fontSize: '1.1rem', borderColor: '#4f46e5', color: '#4f46e5' }}
+//           style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', fontSize: '1.05rem', color: '#4f46e5', border: '2px solid #eef2ff', backgroundColor: '#eef2ff' }}
 //         >
-//           <IconList /> VER LANÇAMENTOS
+//           <IconList /> VER HISTÓRICO DE LANÇAMENTOS
 //         </button>
 //       </div>
 //     </main>

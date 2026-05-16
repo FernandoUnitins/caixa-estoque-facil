@@ -50,6 +50,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
   
   const [isScanning, setIsScanning] = useState(false);
   const scannerRef = useRef(null);
+  const tradutorIntervalRef = useRef(null); // <--- Referência para o nosso tradutor
   const [loading, setLoading] = useState(false);
 
   // Estados dos Modais
@@ -170,8 +171,12 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
     setResultadosBusca([]);
   };
 
+  // ==========================================
+  // FUNÇÃO DE CÂMERA E TRADUTOR EM TEMPO REAL
+  // ==========================================
   const abrirLeitor = () => {
     setIsScanning(true);
+    
     setTimeout(() => {
       if (!scannerRef.current) {
         scannerRef.current = new Html5QrcodeScanner("reader-pdv", { fps: 10, qrbox: 250 }, false);
@@ -182,10 +187,29 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
           else mostrarToast('Produto não cadastrado.', 'erro');
         }, () => {});
       }
+
+      // Inicia a função que traduz o componente em inglês automaticamente
+      tradutorIntervalRef.current = setInterval(() => {
+        const elementos = document.querySelectorAll('#reader-pdv span, #reader-pdv button, #reader-pdv a, #reader-pdv div');
+        elementos.forEach(el => {
+          if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
+            const texto = el.innerText.trim();
+            if (texto === 'Request Camera Permissions' || texto === 'Request camera permissions') el.innerText = 'Permitir Acesso à Câmera';
+            else if (texto === 'Scan an Image File') el.innerText = 'Ler a partir de uma foto';
+            else if (texto === 'Scan using camera directly') el.innerText = 'Ler usando a câmera';
+            else if (texto === 'Start Scanning') el.innerText = 'Iniciar Leitura';
+            else if (texto === 'Stop Scanning') el.innerText = 'Parar Leitura';
+            else if (texto === 'Choose Image' || texto === 'Choose Image - No file chosen') el.innerText = 'Escolher Arquivo';
+            else if (texto === 'No camera found') el.innerText = 'Nenhuma câmera encontrada';
+          }
+        });
+      }, 300);
+
     }, 200);
   };
 
   const fecharLeitor = () => {
+    if (tradutorIntervalRef.current) clearInterval(tradutorIntervalRef.current);
     if (scannerRef.current) { scannerRef.current.clear().catch(()=>{}); scannerRef.current = null; }
     setIsScanning(false);
   };
@@ -231,7 +255,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
 
     const { data: lancData, error: lancError } = await supabase.from('lancamentos').insert([{
       tipo: 'ENTRADA',
-      descricao: 'VENDA PDV',
+      descricao: 'VENDA', 
       valor: totalFinal,
       desconto: descGlobalFormatado,
       valor_recebido: valorRecebidoFinal,
@@ -358,14 +382,11 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
     setLoading(false);
   };
 
-  // ==========================================
-  // FUNÇÕES DE RELATÓRIO DO CAIXA ATUAL
-  // ==========================================
   const carregarLancamentosSessao = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('lancamentos')
-      .select('*')
+      .select('*, caixas_sessoes(usuarios(nome))')
       .eq('sessao_id', sessaoCaixa.id)
       .order('data_hora', { ascending: false });
 
@@ -392,14 +413,12 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
     }
   };
 
-  // Filtragem dinâmica do Relatório
   const lancamentosFiltrados = lancamentosSessao.filter(l => {
     if (filtroTipo === 'ENTRADA') return l.tipo === 'ENTRADA' || l.tipo === 'REFORCO';
     if (filtroTipo === 'SAIDA') return l.tipo === 'SAIDA' || l.tipo === 'SANGRIA';
-    return true; // TODOS
+    return true; 
   });
 
-  // Calcula o total dos lançamentos que estão visíveis na tela
   const totalFiltrado = lancamentosFiltrados.reduce((acc, l) => {
     if (filtroTipo === 'TODOS') {
       if (l.tipo === 'ENTRADA' || l.tipo === 'REFORCO') return acc + Number(l.valor);
@@ -424,9 +443,6 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
     }
   };
 
-  // ==========================================
-  // RENDERIZAÇÃO DO MODO CHECKOUT (PAGAMENTO)
-  // ==========================================
   if (modoPagamento) {
     return (
       <main className="tela" style={{ paddingBottom: '30px' }}>
@@ -456,8 +472,8 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
                 <button type="button" onClick={() => setTipoDescontoGlobal('porcentagem')} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: tipoDescontoGlobal === 'porcentagem' ? '#4f46e5' : '#e5e7eb', color: tipoDescontoGlobal === 'porcentagem' ? 'white' : '#374151', fontWeight: 'bold', border: 'none' }}>% (Porcentagem)</button>
               </div>
               {tipoDescontoGlobal === 'valor' ? 
-                <input type="text" placeholder="0,00" value={descontoGlobalValorStr} onChange={e => setDescontoGlobalValorStr(mascaraMoeda(e.target.value))} className="input-padrao" style={{marginTop: '10px'}} /> :
-                <input type="number" placeholder="%" value={descontoGlobalPercStr} onChange={e => setDescontoGlobalPercStr(e.target.value)} className="input-padrao" style={{marginTop: '10px'}} />
+                <input type="text" placeholder="0,00" value={descontoGlobalValorStr} onChange={e => setDescontoGlobalValorStr(mascaraMoeda(e.target.value))} className="input-padrao" style={{marginTop: '10px'}} inputMode="numeric" /> :
+                <input type="number" placeholder="%" value={descontoGlobalPercStr} onChange={e => setDescontoGlobalPercStr(e.target.value)} className="input-padrao" style={{marginTop: '10px'}} inputMode="numeric" />
               }
             </div>
           )}
@@ -502,7 +518,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
               <LabelCampo>Valor Recebido do Cliente (Em mãos)</LabelCampo>
               <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'white', border: '1px solid #10b981', borderRadius: '8px', overflow: 'hidden', marginBottom: '5px', boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)' }}>
                 <span style={{ padding: '0 15px', fontWeight: 'bold', color: '#10b981' }}>R$</span>
-                <input type="text" ref={valorRecebidoRef} placeholder="0,00" value={valorRecebido} onChange={e => setValorRecebido(mascaraMoeda(e.target.value))} style={{ flex: 1, border: 'none', padding: '15px 15px 15px 0', outline: 'none', fontSize: '1.2rem', fontWeight: 'bold' }} required />
+                <input type="text" ref={valorRecebidoRef} placeholder="0,00" value={valorRecebido} onChange={e => setValorRecebido(mascaraMoeda(e.target.value))} style={{ flex: 1, border: 'none', padding: '15px 15px 15px 0', outline: 'none', fontSize: '1.2rem', fontWeight: 'bold' }} required inputMode="numeric" />
               </div>
               
               <div style={{ backgroundColor: troco > 0 ? '#eef2ff' : '#f9fafb', padding: '15px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
@@ -534,7 +550,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
         </button>
       </div>
 
-      {/* MODAL DE GESTÃO (COM O NOVO BOTÃO DE RELATÓRIO) */}
+      {/* MODAL DE GESTÃO */}
       {modalGerenciar && (
         <Overlay>
           <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '20px', width: '90%', maxWidth: '350px' }}>
@@ -579,38 +595,31 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
               <button onClick={() => setModalLancamentos(false)} style={{ background: 'none', border: 'none', padding: 0 }}><IconClose color="#9ca3af" /></button>
             </div>
 
-            {/* Filtros Rápidos */}
-            <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', gap: '5px', marginBottom: '15px' }}>
               <button onClick={() => setFiltroTipo('TODOS')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: filtroTipo === 'TODOS' ? '#4f46e5' : '#f3f4f6', color: filtroTipo === 'TODOS' ? 'white' : '#4b5563', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer' }}>TODOS</button>
               <button onClick={() => setFiltroTipo('ENTRADA')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: filtroTipo === 'ENTRADA' ? '#10b981' : '#f3f4f6', color: filtroTipo === 'ENTRADA' ? 'white' : '#4b5563', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer' }}>ENTRADAS</button>
               <button onClick={() => setFiltroTipo('SAIDA')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: filtroTipo === 'SAIDA' ? '#ef4444' : '#f3f4f6', color: filtroTipo === 'SAIDA' ? 'white' : '#4b5563', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer' }}>SAÍDAS</button>
             </div>
 
-            {/* CAIXA COM O TOTAL CALCULADO DO FILTRO ATUAL */}
             {!loading && (
-              <>
-                <div style={{ backgroundColor: filtroTipo === 'ENTRADA' ? '#ecfdf5' : filtroTipo === 'SAIDA' ? '#fef2f2' : '#eef2ff', padding: '10px 15px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', border: `1px solid ${filtroTipo === 'ENTRADA' ? '#a7f3d0' : filtroTipo === 'SAIDA' ? '#fecaca' : '#c7d2fe'}` }}>
+              <div style={{ backgroundColor: filtroTipo === 'ENTRADA' ? '#ecfdf5' : filtroTipo === 'SAIDA' ? '#fef2f2' : '#eef2ff', padding: '12px 15px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', border: `1px solid ${filtroTipo === 'ENTRADA' ? '#a7f3d0' : filtroTipo === 'SAIDA' ? '#fecaca' : '#c7d2fe'}` }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: filtroTipo === 'ENTRADA' ? '#047857' : filtroTipo === 'SAIDA' ? '#b91c1c' : '#4338ca' }}>
-                     TOTAL {filtroTipo === 'TODOS' ? 'LÍQUIDO (ENTRADAS - SAÍDAS)' : filtroTipo}:
+                     TOTAL {filtroTipo === 'TODOS' ? 'LÍQUIDO' : filtroTipo}:
                   </span>
-                  <strong style={{ fontSize: '1.2rem', color: filtroTipo === 'ENTRADA' ? '#10b981' : filtroTipo === 'SAIDA' ? '#ef4444' : (totalFiltrado >= 0 ? '#4f46e5' : '#ef4444') }}>
-                     {formatarMoeda(totalFiltrado)}
-                  </strong>
-                </div>
-
-                {/* CONTAGEM DISCRETA DE LANÇAMENTOS */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '15px', paddingRight: '5px' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: '600' }}>
-                    {lancamentosFiltrados.length} {lancamentosFiltrados.length === 1 ? 'registro' : 'registros'}
+                  <span style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '4px', fontWeight: '600' }}>
+                    {lancamentosFiltrados.length} {lancamentosFiltrados.length === 1 ? 'registo' : 'registos'} na lista
                   </span>
                 </div>
-              </>
+                <strong style={{ fontSize: '1.2rem', color: filtroTipo === 'ENTRADA' ? '#10b981' : filtroTipo === 'SAIDA' ? '#ef4444' : (totalFiltrado >= 0 ? '#4f46e5' : '#ef4444') }}>
+                   {formatarMoeda(totalFiltrado)}
+                </strong>
+              </div>
             )}
 
-            {/* Lista com scroll */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '5px' }}>
               {loading ? (
-                <p style={{ textAlign: 'center', color: '#6b7280', margin: '20px 0' }}>Buscando transações...</p>
+                <p style={{ textAlign: 'center', color: '#6b7280', margin: '20px 0' }}>A carregar transações...</p>
               ) : lancamentosFiltrados.length === 0 ? (
                 <p style={{ textAlign: 'center', color: '#9ca3af', margin: '20px 0' }}>Nenhum lançamento encontrado neste filtro.</p>
               ) : (
@@ -630,7 +639,11 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
                       <strong style={{ display: 'block', fontSize: '0.9rem', color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {lanc.descricao}
                       </strong>
-                      <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{lanc.forma_pagamento || 'N/A'}</span>
+                      <span style={{ fontSize: '0.75rem', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span>{lanc.forma_pagamento || 'N/A'}</span>
+                        <span>•</span>
+                        <span style={{ color: '#4f46e5', fontWeight: '600' }}>Op: {lanc.caixas_sessoes?.usuarios?.nome || 'Desconhecido'}</span>
+                      </span>
                     </div>
                     <strong style={{ color: (lanc.tipo === 'ENTRADA' || lanc.tipo === 'REFORCO') ? '#10b981' : '#ef4444', fontSize: '1.1rem', flexShrink: 0 }}>
                       {(lanc.tipo === 'ENTRADA' || lanc.tipo === 'REFORCO') ? '+' : '-'}{formatarMoeda(lanc.valor)}
@@ -667,6 +680,10 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
                 <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>Pagamento:</span>
                 <strong style={{ color: '#374151', fontSize: '0.85rem' }}>{modalDetalhes.forma_pagamento || 'Não info.'}</strong>
               </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ color: '#6b7280', fontSize: '0.85rem' }}>Operador:</span>
+                <strong style={{ color: '#374151', fontSize: '0.85rem' }}>{modalDetalhes.caixas_sessoes?.usuarios?.nome || 'Desconhecido'}</strong>
+              </div>
               {modalDetalhes.descricao && (
                 <div style={{ marginBottom: '15px', backgroundColor: '#f9fafb', padding: '10px', borderRadius: '8px' }}>
                   <span style={{ color: '#6b7280', fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Descrição / Origem:</span>
@@ -678,7 +695,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
                 <div style={{ marginTop: '20px' }}>
                   <h4 style={{ fontSize: '0.9rem', color: '#4b5563', borderBottom: '1px solid #e5e7eb', paddingBottom: '5px', marginBottom: '10px' }}>PRODUTOS DA VENDA</h4>
                   {buscandoItens ? (
-                    <p style={{ fontSize: '0.8rem', color: '#6b7280', textAlign: 'center' }}>Carregando produtos...</p>
+                    <p style={{ fontSize: '0.8rem', color: '#6b7280', textAlign: 'center' }}>A carregar produtos...</p>
                   ) : itensDetalhe.length === 0 ? (
                     <p style={{ fontSize: '0.8rem', color: '#9ca3af', textAlign: 'center' }}>Venda sem produtos avulsos ou lançamento manual antigo.</p>
                   ) : (
@@ -734,10 +751,10 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
         <Overlay>
           <form onSubmit={salvarOperacaoCaixa} style={{ backgroundColor: 'white', padding: '25px', borderRadius: '20px', width: '90%', maxWidth: '350px' }}>
             <h3 style={{ textAlign: 'center', marginBottom: '15px', color: modalOperacaoFisica === 'REFORCO' ? '#10b981' : '#ef4444' }}>
-              {modalOperacaoFisica === 'REFORCO' ? 'INSERIR DINHEIRO' : modalOperacaoFisica === 'SANGRIA' ? 'RETIRAR DINHEIRO' : 'REGISTRAR DESPESA'}
+              {modalOperacaoFisica === 'REFORCO' ? 'INSERIR DINHEIRO' : modalOperacaoFisica === 'SANGRIA' ? 'RETIRAR DINHEIRO' : 'REGISTAR DESPESA'}
             </h3>
             <LabelCampo>Valor (R$)</LabelCampo>
-            <input type="text" value={valorOperacao} onChange={e => setValorOperacao(mascaraMoeda(e.target.value))} className="input-padrao" placeholder="0,00" required style={{ fontSize: '1.2rem', textAlign: 'center', marginTop: '5px' }} />
+            <input type="text" value={valorOperacao} onChange={e => setValorOperacao(mascaraMoeda(e.target.value))} className="input-padrao" placeholder="0,00" required style={{ fontSize: '1.2rem', textAlign: 'center', marginTop: '5px' }} inputMode="numeric" />
             <div style={{ marginTop: '15px' }}>
               <LabelCampo>Observação (Ex: Papelaria, Fundo Troco)</LabelCampo>
               <textarea value={obsOperacao} onChange={e => setObsOperacao(e.target.value.toUpperCase())} className="input-padrao" rows="2" style={{ marginTop: '5px' }} required={modalOperacaoFisica === 'SAIDA' || modalOperacaoFisica === 'SANGRIA'} />
@@ -779,7 +796,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
             <p style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '10px' }}>Conte o dinheiro físico e informe abaixo:</p>
             <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f3f4f6', borderRadius: '12px', border: '1px solid #d1d5db', overflow: 'hidden', marginBottom: '15px' }}>
                <span style={{ padding: '0 15px', fontWeight: 'bold', color: '#6b7280' }}>R$</span>
-               <input type="text" value={valorContadoFechamento} onChange={e => setValorContadoFechamento(mascaraMoeda(e.target.value))} style={{ flex: 1, border: 'none', padding: '15px 15px 15px 0', background: 'none', outline: 'none', fontSize: '1.3rem', fontWeight: 'bold' }} placeholder="0,00" />
+               <input type="text" value={valorContadoFechamento} onChange={e => setValorContadoFechamento(mascaraMoeda(e.target.value))} style={{ flex: 1, border: 'none', padding: '15px 15px 15px 0', background: 'none', outline: 'none', fontSize: '1.3rem', fontWeight: 'bold' }} placeholder="0,00" inputMode="numeric" />
             </div>
 
             {valorContadoFechamento.trim() !== '' && (
@@ -844,13 +861,13 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
             <LabelCampo>Quantidade</LabelCampo>
             <div style={{ display: 'flex', alignItems: 'stretch', marginBottom: '20px', justifyContent: 'center' }}>
               <button onClick={() => setModalEditar({...modalEditar, quantidadeVenda: Math.max(1, modalEditar.quantidadeVenda - 1)})} style={{ width: '60px', height: '50px', borderRadius: '12px 0 0 12px', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRight: 'none', color: '#374151', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><IconMinus color="#374151" /></button>
-              <input type="number" readOnly value={modalEditar.quantidadeVenda} style={{ width: '80px', height: '50px', border: '1px solid #d1d5db', textAlign: 'center', fontWeight: 'bold', fontSize: '1.2rem', outline: 'none' }} />
+              <input type="number" readOnly value={modalEditar.quantidadeVenda} style={{ width: '80px', height: '50px', border: '1px solid #d1d5db', textAlign: 'center', fontWeight: 'bold', fontSize: '1.2rem', outline: 'none' }} inputMode="numeric" />
               <button onClick={() => setModalEditar({...modalEditar, quantidadeVenda: Math.min(modalEditar.estoqueMax, modalEditar.quantidadeVenda + 1)})} style={{ width: '60px', height: '50px', borderRadius: '0 12px 12px 0', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderLeft: 'none', color: '#374151', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><IconPlus color="#374151" /></button>
             </div>
             <LabelCampo>Desconto (R$)</LabelCampo>
             <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'white', border: '1px solid #d1d5db', borderRadius: '8px', overflow: 'hidden', marginBottom: '10px' }}>
               <span style={{ paddingLeft: '15px', paddingRight: '10px', color: '#6b7280', fontWeight: 'bold' }}>R$</span>
-              <input type="text" value={modalEditar.descontoStr} onChange={e => setModalEditar({...modalEditar, descontoStr: mascaraMoeda(e.target.value)})} placeholder="0,00" style={{ flex: 1, border: 'none', padding: '15px 15px 15px 0', outline: 'none', fontSize: '1.1rem', textAlign: 'center' }} />
+              <input type="text" value={modalEditar.descontoStr} onChange={e => setModalEditar({...modalEditar, descontoStr: mascaraMoeda(e.target.value)})} placeholder="0,00" style={{ flex: 1, border: 'none', padding: '15px 15px 15px 0', outline: 'none', fontSize: '1.1rem', textAlign: 'center' }} inputMode="numeric" />
             </div>
             <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '5px', textAlign: 'center' }}>Aplicar desconto rápido (%)</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '20px' }}>
