@@ -131,7 +131,7 @@ function App() {
 
       <header className="navbar">
         <div className="navbar-brand">
-          CEF - Caixa & Estoque
+          CEF - Caixa & Estoque Fácil
         </div>
 
         <nav className="nav-links-desktop">
