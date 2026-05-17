@@ -13,6 +13,8 @@ import TelaFornecedores from './components/TelaFornecedores';
 import TelaFormasPagamento from './components/TelaFormasPagamento';
 import TelaPerfil from './components/TelaPerfil';
 import TelaUsuarios from './components/TelaUsuarios';
+import TelaRelatorios from './components/TelaRelatorios';
+import { ChartColumnBig } from 'lucide-react'; // Novo ícone!
 import { House } from 'lucide-react';
 import { FolderPen } from 'lucide-react';
 
@@ -139,6 +141,11 @@ function App() {
           {mostrarMenuCadastros && (
             <button onClick={() => navegarPara('cadastros')} className={telaAtual === 'cadastros' ? 'ativo' : ''}><FolderPen /> Cadastros</button>
           )}
+          {perfil.tipo === 'adm' && (
+  <button onClick={() => navegarPara('relatorios')} className={telaAtual === 'relatorios' ? 'ativo' : ''}>
+    <ChartColumnBig size="20" /> Relatórios
+  </button>
+)}
 
           <div className="navbar-user-info">
             <span><IconUser /> {perfil.nome}</span>
@@ -155,6 +162,11 @@ function App() {
             {perfil.tipo === 'adm' && <button onClick={() => navegarPara('resumo')}><IconHome /> Início</button>}
             <button onClick={() => navegarPara('caixa')}><IconCash /> Caixa</button>
             {mostrarMenuCadastros && <button onClick={() => navegarPara('cadastros')}><IconFolder /> Cadastros e Perfil</button>}
+            {perfil.tipo === 'adm' && (
+  <button onClick={() => navegarPara('relatorios')}>
+    <ChartColumnBig size="20" /> Relatórios Gerenciais
+  </button>
+)}
             <button onClick={() => { setMenuAberto(false); setModalLogout(true); }} style={{color: '#ef4444', borderTop: '1px dashed #eee', marginTop: '10px'}}>
               <IconLogOut /> Sair do Sistema
             </button>
@@ -205,6 +217,7 @@ function App() {
             )}
           </div>
         )}
+        {telaAtual === 'relatorios' && <TelaRelatorios />}
       </div>
     </div>
   );
