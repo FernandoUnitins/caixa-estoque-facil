@@ -318,7 +318,7 @@ export default function TelaRelatorios() {
           <th onClick={() => handleSort('codigo')} style={{ cursor: 'pointer', padding: '12px 15px' }}>Código <SortIcon columnKey="codigo" /></th>
           <th onClick={() => handleSort('nome')} style={{ cursor: 'pointer', padding: '12px 15px' }}>Produto <SortIcon columnKey="nome" /></th>
           <th onClick={() => handleSort('qtd')} style={{ cursor: 'pointer', padding: '12px 15px', textAlign: 'right' }}>Qtd Vendida <SortIcon columnKey="qtd" /></th>
-          <th onClick={() => handleSort('total')} style={{ cursor: 'pointer', padding: '12px 15px', textAlign: 'right' }}>Faturamento <SortIcon columnKey="total" /></th>
+          <th onClick={() => handleSort('total')} style={{ cursor: 'pointer', padding: '12px 15px', textAlign: 'right' }}>Valor <SortIcon columnKey="total" /></th>
         </tr>
       );
     } else if (tipoRelatorio === 'pagamento' || tipoRelatorio === 'fluxo_caixa') {
@@ -405,14 +405,30 @@ export default function TelaRelatorios() {
     'validade': 'Controle de Validades no Período'
   }[tipoRelatorio];
 
+  // Adicionada a classe ".apenas-impressao" com "display: none" no visual normal
+  // e forçando a exibição dela SOMENTE dentro da media print
   const printStyles = `
+    .apenas-impressao { display: none; }
+    
     @media print {
       @page { margin: 10mm; }
       body, html { background-color: #ffffff !important; }
       body * { visibility: hidden; }
+      
       #area-impressao, #area-impressao * { visibility: visible; }
-      #area-impressao { position: absolute; left: 0; top: 0; width: 100%; background-color: #ffffff !important; margin: 0; padding: 0; }
+      #area-impressao { 
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        width: 100%; 
+        background-color: #ffffff !important; 
+        margin: 0; 
+        padding: 0; 
+      }
+      
+      .apenas-impressao { display: block !important; }
       .no-print { display: none !important; }
+      
       table { border-collapse: collapse; width: 100%; }
       th, td { border: 1px solid #d1d5db !important; padding: 10px !important; color: #111827 !important; }
       th { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -624,7 +640,7 @@ export default function TelaRelatorios() {
           <div id="area-impressao">
             
             {/* CABEÇALHO DO PDF INVISÍVEL NA WEB, VISÍVEL NO PDF */}
-            <div className="apenas-impressao" style={{ display: 'none', marginBottom: '30px', textAlign: 'center', backgroundColor: 'white', padding: '20px 0' }}>
+            <div className="apenas-impressao" style={{ marginBottom: '30px', textAlign: 'center', backgroundColor: 'white', padding: '20px 0' }}>
               <h1 style={{ color: '#111827', margin: '0 0 8px 0', fontSize: '2.2rem', fontWeight: '900', letterSpacing: '-0.5px' }}>MINI MERCADO FEITOSA</h1>
               <h2 style={{ color: '#4b5563', margin: '0 0 10px 0', fontSize: '1.2rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 {tituloDoRelatorio}
