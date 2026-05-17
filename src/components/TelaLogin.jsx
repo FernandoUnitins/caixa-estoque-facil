@@ -32,7 +32,7 @@ export default function TelaLogin({ mostrarToast }) {
 
       // Trava de segurança para contas inativas
       if (userRecord.ativo === false) {
-        mostrarToast('Sua conta foi desativada pelo administrador.', 'erro');
+        mostrarToast('Sua conta foi desativada.', 'erro');
         setLoading(false);
         return;
       }
@@ -78,7 +78,7 @@ export default function TelaLogin({ mostrarToast }) {
         console.error('Erro na recuperação:', error);
         mostrarToast('Erro ao enviar link. Verifique se o e-mail está correto.', 'erro');
       } else {
-        mostrarToast('Link de recuperação enviado para o seu e-mail!', 'sucesso');
+        mostrarToast('Link de recuperação enviado para o e-mail informado!', 'sucesso');
         setModoRecuperacao(false);
         setEmailRecuperacao(''); 
       }
@@ -160,11 +160,11 @@ export default function TelaLogin({ mostrarToast }) {
 
       <form onSubmit={handleLogin} className="form-padrao">
         <div style={{ width: '100%' }}>
-          <Label htmlFor="usuario">Nome de usuário ou E-mail</Label>
+          <Label htmlFor="usuario">Nome de usuário</Label>
           <input
             id="usuario"
             type="text"
-            placeholder="Ex: caixa01"
+            placeholder=""
             value={usernameInput}
             onChange={(e) => setUsernameInput(e.target.value)}
             className="input-padrao"
@@ -177,7 +177,7 @@ export default function TelaLogin({ mostrarToast }) {
           <input
             id="senha"
             type="password"
-            placeholder="Sua senha"
+            placeholder=""
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
             className="input-padrao"
