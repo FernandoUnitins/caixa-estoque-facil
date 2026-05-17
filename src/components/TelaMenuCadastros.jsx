@@ -54,7 +54,7 @@ export default function TelaMenuCadastros({ setSubTela, perfil }) {
         
         {isAdm && (
           <button className="btn-secundario" onClick={() => setSubTela('usuarios')} style={{ border: '1px solid #4f46e5', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: 0, marginTop: '10px' }}>
-            <IdCardLanyard /> GESTÃO DE FUNCIONÁRIOS
+            <IdCardLanyard /> GERENCIAR USUÁRIOS
           </button>
         )}
 
