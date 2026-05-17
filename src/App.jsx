@@ -161,7 +161,7 @@ function App() {
 
         {menuAberto && (
           <div className="menu-mobile-overlay">
-            {perfil.tipo === 'adm' && <button onClick={() => navegarPara('resumo')}><IconHome /> Início</button>}
+            {perfil.tipo === 'adm' && <button onClick={() => navegarPara('resumo')}><House /> Início</button>}
             <button onClick={() => navegarPara('caixa')}><IconCaixa /> Caixa</button>
             {mostrarMenuCadastros && <button onClick={() => navegarPara('cadastros')}><IconSettings /> Configurações</button>}
             {perfil.tipo === 'adm' && (
@@ -170,7 +170,7 @@ function App() {
   </button>
 )}
             <button onClick={() => { setMenuAberto(false); setModalLogout(true); }} style={{color: '#ef4444', borderTop: '1px dashed #eee', marginTop: '10px'}}>
-              <IconLogOut /> Sair do Sistema
+              <IconLogOut /> Sair
             </button>
           </div>
         )}
