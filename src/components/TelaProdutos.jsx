@@ -502,9 +502,7 @@ export default function TelaProdutos({ mostrarToast, perfil }) {
       <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#4b5563', margin: 0 }}>
         <PackageSearch size="32" strokeWidth="1.5px" /> PRODUTOS
       </h2>
-      <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.85rem', marginTop: '5px' }}>
-        Faça uma busca para visualizar o estoque. Deixe o campo vazio para listar todos os produtos.
-      </p>
+
 
       <form onSubmit={realizarBusca} style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px', backgroundColor: '#f9fafb', padding: '15px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
         <div style={{ display: 'flex', gap: '10px' }}>

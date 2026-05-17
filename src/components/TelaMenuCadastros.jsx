@@ -20,7 +20,7 @@ export default function TelaMenuCadastros({ setSubTela, perfil }) {
 
   return (
     <main className="tela">
-      <h2 style={{ color: '#4b5563', marginBottom: '10px' }}>CADASTROS E AJUSTES</h2>
+              <h2 style={{ color: '#374151', fontSize: '1.4rem', margin: '0 0 5px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>CADASTROS E AJUSTES</h2>
       
       <div className="form-padrao" style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         
@@ -62,37 +62,3 @@ export default function TelaMenuCadastros({ setSubTela, perfil }) {
     </main>
   );
 }
-
-
-
-
-
-
-
-
-
-// import React from 'react';
-
-// export default function TelaMenuCadastros({ setSubTela, perfil }) {
-//   return (
-//     <main className="tela">
-//       <h2>CADASTROS E AJUSTES</h2>
-//       <div className="form-padrao" style={{ marginTop: '20px' }}>
-//         <button className="btn-secundario" onClick={() => setSubTela('produtos')}>📦 PRODUTOS</button>
-//         <button className="btn-secundario" onClick={() => setSubTela('fornecedores')}>🚚 FORNECEDORES</button>
-//         <button className="btn-secundario" onClick={() => setSubTela('categorias')}>🏷️ CATEGORIAS</button>
-        
-//         {/* NOVO BOTÃO DE FORMAS DE PAGAMENTO */}
-//         <button className="btn-secundario" onClick={() => setSubTela('pagamentos')}>💳 FORMAS DE PAGAMENTO</button>
-        
-//         <button className="btn-secundario" onClick={() => setSubTela('perfil')}>👤 MEU PERFIL</button>
-        
-//         {perfil?.tipo === 'adm' && (
-//           <button className="btn-secundario" onClick={() => setSubTela('usuarios')} style={{ border: '1px solid #4f46e5', color: '#4f46e5' }}>
-//             👥 GESTÃO DE FUNCIONÁRIOS
-//           </button>
-//         )}
-//       </div>
-//     </main>
-//   );
-// }

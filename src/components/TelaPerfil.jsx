@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
+const IconUser = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
+
 
 export default function TelaPerfil({ perfil, mostrarToast }) {
   const [novoUsername, setNovoUsername] = useState(perfil?.username || '');
@@ -85,7 +87,8 @@ export default function TelaPerfil({ perfil, mostrarToast }) {
 
   return (
     <main className="tela" style={{ paddingBottom: '30px' }}>
-      <h2>👤 MEU PERFIL</h2>
+            <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#4b5563' }}>
+<IconUser /> MEU PERFIL</h2>
       <p style={{ textAlign: 'center', fontSize: '0.85rem', color: '#6b7280', marginBottom: '20px' }}>
         Atualize seus dados de acesso e contato
       </p>
@@ -103,7 +106,7 @@ export default function TelaPerfil({ perfil, mostrarToast }) {
         </div>
 
         <div style={{ width: '100%' }}>
-          <Label>E-mail de Contato</Label>
+          <Label>E-mail de contato para recuperação de senha</Label>
           <input 
             type="email" 
             value={novoEmail} 

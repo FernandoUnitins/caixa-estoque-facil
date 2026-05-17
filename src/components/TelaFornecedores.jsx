@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { Factory } from 'lucide-react';
+
 
 // ==========================================
 // ÍCONES SVG
@@ -246,7 +248,7 @@ export default function TelaFornecedores({ mostrarToast }) {
         <form onSubmit={salvarFornecedor} className="form-padrao" style={{ width: '100%', marginTop: '20px' }}>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <LabelCampo obrigatorio>CNPJ/CPF (Alfa-Numérico)</LabelCampo>
+            <LabelCampo obrigatorio>CNPJ/CPF</LabelCampo>
             {/* Removido o inputMode numérico para aceitar as letras do novo CNPJ */}
             <input type="text" name="cnpj_cpf" value={form.cnpj_cpf} onChange={handleChange} onBlur={buscarCNPJ} className="input-padrao" required />
           </div>
@@ -377,7 +379,7 @@ export default function TelaFornecedores({ mostrarToast }) {
   return (
     <main className="tela" style={{ paddingBottom: '30px' }}>
       <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#4b5563' }}>
-        <IconTruck size="24" /> FORNECEDORES
+        <Factory size="24" /> FORNECEDORES
       </h2>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
