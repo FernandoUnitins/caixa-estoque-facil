@@ -131,7 +131,7 @@ function App() {
 
       <header className="navbar">
         <div className="navbar-brand">
-          CEF - Caixa & Estoque Fácil
+          Mini Mercado Feitosa
         </div>
 
         <nav className="nav-links-desktop">
