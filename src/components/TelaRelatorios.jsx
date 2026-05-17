@@ -1,22 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { 
-  BarChart3, FileText, Download, Printer, TrendingUp, TrendingDown 
+  BarChart3, FileText, Download, Printer, TrendingUp, TrendingDown, Search
 } from 'lucide-react';
 
 export default function TelaRelatorios() {
   const [abaAtiva, setAbaAtiva] = useState('dashboard'); // 'dashboard' ou 'relatorios'
   const [loading, setLoading] = useState(true);
+  const [buscandoFiltro, setBuscandoFiltro] = useState(false);
+
+  // Calcula o primeiro e último dia do mês corrente para o valor padrão
+  const hoje = new Date();
+  const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
+  const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().split('T')[0];
+
+  const [dataInicio, setDataInicio] = useState(primeiroDiaMes);
+  const [dataFim, setDataFim] = useState(ultimoDiaMes);
 
   // Dados brutos do banco
   const [produtos, setProdutos] = useState([]);
   const [lancamentos, setLancamentos] = useState([]);
   const [itensVenda, setItensVenda] = useState([]);
+  
+  // Estado exclusivo para o Gráfico (últimos 7 dias a partir de hoje)
+  const [lancamentosGrafico, setLancamentosGrafico] = useState([]);
+  const [detalheGrafico, setDetalheGrafico] = useState(null); // Controla o Modal do Gráfico
 
   // Estados dos Filtros de Relatório
   const [tipoRelatorio, setTipoRelatorio] = useState('mais_vendidos');
 
-  // Transformado em function normal para o hoisting funcionar antes do useEffect
   async function carregarDadosBase() {
     setLoading(true);
     
@@ -24,25 +36,49 @@ export default function TelaRelatorios() {
     const { data: prodData } = await supabase.from('produtos').select('*');
     if (prodData) setProdutos(prodData);
 
-    // Busca Lançamentos (Últimos 30 dias para o gráfico ficar leve)
-    const trintaDiasAtras = new Date();
-    trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
-    
-    const { data: lancData } = await supabase.from('lancamentos')
-      .select('*')
-      .gte('data_hora', trintaDiasAtras.toISOString());
-    if (lancData) setLancamentos(lancData);
-
     // Busca Itens Vendidos (Para o relatório de mais vendidos)
     const { data: itensData } = await supabase.from('itens_venda')
       .select('produto_id, quantidade, subtotal, produtos(descricao, codigo_interno)');
     if (itensData) setItensVenda(itensData);
 
+    // Busca os lançamentos com base no mês corrente
+    await buscarLancamentos(primeiroDiaMes, ultimoDiaMes);
+    
+    // Busca dados exclusivos para o gráfico (últimos 7 dias)
+    await carregarDadosGrafico();
+
     setLoading(false);
+  }
+
+  async function carregarDadosGrafico() {
+    const d = new Date();
+    d.setDate(d.getDate() - 6); // Volta 6 dias para dar 7 dias incluindo hoje
+    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).toISOString();
+    
+    const { data } = await supabase.from('lancamentos')
+      .select('tipo, valor, data_hora')
+      .gte('data_hora', start);
+      
+    if (data) setLancamentosGrafico(data);
+  }
+
+  async function buscarLancamentos(inicio, fim) {
+    setBuscandoFiltro(true);
+    const start = new Date(`${inicio}T00:00:00-03:00`).toISOString();
+    const end = new Date(`${fim}T23:59:59.999-03:00`).toISOString();
+    
+    const { data: lancData } = await supabase.from('lancamentos')
+      .select('*')
+      .gte('data_hora', start)
+      .lte('data_hora', end);
+
+    if (lancData) setLancamentos(lancData);
+    setBuscandoFiltro(false);
   }
 
   useEffect(() => {
     carregarDadosBase();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ==========================================
@@ -52,21 +88,29 @@ export default function TelaRelatorios() {
   const totalSaidas = lancamentos.filter(l => l.tipo === 'SAIDA' || l.tipo === 'SANGRIA').reduce((acc, l) => acc + Number(l.valor), 0);
   const saldoLiquido = totalEntradas - totalSaidas;
 
-  // Gerar dados para o Gráfico de Barras (Últimos 7 dias)
+  // Gerar dados para o Gráfico de Barras (Sempre últimos 7 dias a partir de HOJE)
   const ultimos7Dias = [];
+  const hojeRef = new Date();
+  
   for (let i = 6; i >= 0; i--) {
-    const d = new Date();
+    const d = new Date(hojeRef);
     d.setDate(d.getDate() - i);
     const dataIso = d.toISOString().split('T')[0];
     
-    const lancsDia = lancamentos.filter(l => l.data_hora.startsWith(dataIso));
+    const lancsDia = lancamentosGrafico.filter(l => l.data_hora.startsWith(dataIso));
     const ent = lancsDia.filter(l => l.tipo === 'ENTRADA' || l.tipo === 'REFORCO').reduce((acc, l) => acc + Number(l.valor), 0);
     const sai = lancsDia.filter(l => l.tipo === 'SAIDA' || l.tipo === 'SANGRIA').reduce((acc, l) => acc + Number(l.valor), 0);
     
-    ultimos7Dias.push({ label: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').toUpperCase(), entradas: ent, saidas: sai });
+    ultimos7Dias.push({ 
+      diaSemana: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').toUpperCase(), 
+      diaMes: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+      dataCompleta: d.toLocaleDateString('pt-BR'),
+      entradas: ent, 
+      saidas: sai 
+    });
   }
 
-  const maiorValorGrafico = Math.max(...ultimos7Dias.map(d => Math.max(d.entradas, d.saidas, 1))); // Garante que nunca é 0 para não bugar o CSS
+  const maiorValorGrafico = Math.max(...ultimos7Dias.map(d => Math.max(d.entradas, d.saidas, 1))); // Garante que nunca é 0 para não quebrar o CSS
 
   // ==========================================
   // PROCESSAMENTO DE DADOS (RELATÓRIOS)
@@ -94,9 +138,9 @@ export default function TelaRelatorios() {
       }
 
       case 'validade': {
-        const hoje = new Date();
+        const hojeValidade = new Date();
         const trintaDias = new Date();
-        trintaDias.setDate(hoje.getDate() + 30);
+        trintaDias.setDate(hojeValidade.getDate() + 30);
         
         return produtos.filter(p => p.validade && new Date(p.validade) <= trintaDias)
           .sort((a, b) => new Date(a.validade) - new Date(b.validade));
@@ -164,6 +208,28 @@ export default function TelaRelatorios() {
     <main className="tela" style={{ paddingBottom: '30px' }}>
       <style>{printStyles}</style>
 
+      {/* MODAL DE DETALHES DO GRÁFICO (CLIQUE NA BARRA) */}
+      {detalheGrafico && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '16px', width: '90%', maxWidth: '300px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+            <h3 style={{ margin: '0 0 5px 0', color: '#374151', fontSize: '1.2rem' }}>Movimentação</h3>
+            <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '20px', fontWeight: '600' }}>{detalheGrafico.dataCompleta}</p>
+            
+            <div style={{ backgroundColor: '#ecfdf5', padding: '12px', borderRadius: '8px', marginBottom: '10px', border: '1px solid #a7f3d0' }}>
+              <span style={{ fontSize: '0.75rem', color: '#047857', fontWeight: 'bold' }}>ENTRADAS</span>
+              <strong style={{ display: 'block', fontSize: '1.2rem', color: '#10b981' }}>{formatarMoeda(detalheGrafico.entradas)}</strong>
+            </div>
+            
+            <div style={{ backgroundColor: '#fef2f2', padding: '12px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #fecaca' }}>
+              <span style={{ fontSize: '0.75rem', color: '#b91c1c', fontWeight: 'bold' }}>SAÍDAS</span>
+              <strong style={{ display: 'block', fontSize: '1.2rem', color: '#ef4444' }}>{formatarMoeda(detalheGrafico.saidas)}</strong>
+            </div>
+
+            <button onClick={() => setDetalheGrafico(null)} className="btn-secundario" style={{ margin: 0, width: '100%' }}>FECHAR</button>
+          </div>
+        </div>
+      )}
+
       {/* CABEÇALHO COM ABAS (Escondido na impressão) */}
       <div className="no-print" style={{ display: 'flex', gap: '10px', marginBottom: '20px', backgroundColor: '#f3f4f6', padding: '5px', borderRadius: '12px' }}>
         <button 
@@ -185,7 +251,33 @@ export default function TelaRelatorios() {
       {/* ==================================================== */}
       {abaAtiva === 'dashboard' && (
         <div className="no-print">
-          <h3 style={{ color: '#374151', marginBottom: '15px', fontSize: '1.1rem' }}>Resumo (Últimos 30 dias)</h3>
+          
+          {/* FILTRO DE DATAS DO DASHBOARD */}
+          <div style={{ backgroundColor: '#f9fafb', padding: '15px', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '20px' }}>
+            <h3 style={{ color: '#374151', marginBottom: '10px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Search size="18" /> Filtrar Período
+            </h3>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 45%' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#4b5563', display: 'block', marginBottom: '5px' }}>Data Inicial</label>
+                <input type="date" value={dataInicio} onChange={e => setDataInicio(e.target.value)} className="input-padrao" style={{ margin: 0, padding: '10px' }} />
+              </div>
+              <div style={{ flex: '1 1 45%' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#4b5563', display: 'block', marginBottom: '5px' }}>Data Final</label>
+                <input type="date" value={dataFim} onChange={e => setDataFim(e.target.value)} className="input-padrao" style={{ margin: 0, padding: '10px' }} />
+              </div>
+              <button 
+                onClick={() => buscarLancamentos(dataInicio, dataFim)} 
+                className="btn-entrada" 
+                style={{ flex: '1 1 100%', margin: 0, padding: '10px 15px', height: 'auto' }} 
+                disabled={buscandoFiltro}
+              >
+                {buscandoFiltro ? 'FILTRANDO...' : 'APLICAR FILTRO'}
+              </button>
+            </div>
+          </div>
+
+          <h3 style={{ color: '#374151', marginBottom: '15px', fontSize: '1.1rem' }}>Resumo Financeiro</h3>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '20px' }}>
             <div style={{ backgroundColor: '#ecfdf5', padding: '15px', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
@@ -208,7 +300,11 @@ export default function TelaRelatorios() {
             {/* GRÁFICO DE BARRAS EM PURO CSS */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '180px', paddingBottom: '10px', borderBottom: '1px solid #e5e7eb' }}>
               {ultimos7Dias.map((dia, idx) => (
-                <div key={idx} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', height: '100%', width: '12%', gap: '2px' }}>
+                <div 
+                  key={idx} 
+                  onClick={() => setDetalheGrafico(dia)}
+                  style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', height: '100%', width: '12%', gap: '2px', cursor: 'pointer' }}
+                >
                   <div style={{ display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'flex-end', height: '100%', gap: '2px' }}>
                     <div title={`Entradas: ${formatarMoeda(dia.entradas)}`} style={{ backgroundColor: '#10b981', width: '45%', borderRadius: '4px 4px 0 0', height: `${(dia.entradas / maiorValorGrafico) * 100}%`, minHeight: '4px', transition: 'height 1s ease-out' }}></div>
                     <div title={`Saídas: ${formatarMoeda(dia.saidas)}`} style={{ backgroundColor: '#ef4444', width: '45%', borderRadius: '4px 4px 0 0', height: `${(dia.saidas / maiorValorGrafico) * 100}%`, minHeight: '4px', transition: 'height 1s ease-out' }}></div>
@@ -216,12 +312,18 @@ export default function TelaRelatorios() {
                 </div>
               ))}
             </div>
+            
+            {/* LEGENDA DO EIXO X (Dia da Semana e Data) */}
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '10px' }}>
               {ultimos7Dias.map((dia, idx) => (
-                <span key={idx} style={{ fontSize: '0.65rem', color: '#6b7280', width: '12%', textAlign: 'center', fontWeight: 'bold' }}>{dia.label}</span>
+                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '12%' }}>
+                  <span style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 'bold' }}>{dia.diaSemana}</span>
+                  <span style={{ fontSize: '0.6rem', color: '#9ca3af', marginTop: '2px' }}>{dia.diaMes}</span>
+                </div>
               ))}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginTop: '15px' }}>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginTop: '20px' }}>
               <span style={{ fontSize: '0.75rem', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width:'10px', height:'10px', backgroundColor:'#10b981', borderRadius:'2px'}}></div> Entradas</span>
               <span style={{ fontSize: '0.75rem', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width:'10px', height:'10px', backgroundColor:'#ef4444', borderRadius:'2px'}}></div> Saídas</span>
             </div>
