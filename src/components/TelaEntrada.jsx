@@ -450,7 +450,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
         <h2 style={{ color: '#10b981', textAlign: 'center', fontSize: '1.4rem', marginBottom: '20px' }}>FINALIZAR VENDA</h2>
         
         <div style={{ backgroundColor: '#10b981', color: 'white', padding: '20px', borderRadius: '16px', textAlign: 'center', marginBottom: '20px' }}>
-          <p style={{ fontSize: '1rem', opacity: 0.9 }}>TOTAL A PAGAR</p>
+          <p style={{ fontSize: '1rem', opacity: 0.9 }}>TOTAL A RECEBER</p>
           {descGlobalFormatado > 0 && <p style={{ textDecoration: 'line-through', opacity: 0.7, fontSize: '1rem' }}>De: R$ {formatarMoedaExibicao(totalSub)}</p>}
           <h1 style={{ fontSize: '2.5rem', margin: '5px 0' }}>R$ {formatarMoedaExibicao(totalFinal)}</h1>
         </div>
