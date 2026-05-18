@@ -6,6 +6,7 @@ import {
 
 export default function TelaRelatorios() {
   const [loading, setLoading] = useState(true);
+  const [meuPerfil, setMeuPerfil] = useState(null); // Estado para guardar quem está logado
   
   // Datas Padrão (Mês Corrente)
   const hoje = new Date();
@@ -44,7 +45,22 @@ export default function TelaRelatorios() {
 
   async function carregarDadosBase() {
     setLoading(true);
+
+    // 1. Identifica o usuário logado para aplicar permissões
+    const { data: { user } } = await supabase.auth.getUser();
+    let perfilAtual = null;
+    if (user) {
+      const { data: p } = await supabase.from('usuarios').select('*').eq('id', user.id).single();
+      setMeuPerfil(p);
+      perfilAtual = p;
+      
+      // Se for caixa, muda o relatório inicial padrão para algo que ele tenha acesso
+      if (p?.tipo !== 'adm') {
+        setTipoRelatorio('estoque_minimo');
+      }
+    }
     
+    // 2. Busca listas auxiliares
     const { data: prodData } = await supabase.from('produtos').select('*');
     if (prodData) setProdutos(prodData);
 
@@ -114,13 +130,18 @@ export default function TelaRelatorios() {
       } 
       else if (tipoRelatorio === 'pagamento' || tipoRelatorio === 'fluxo_caixa') {
         let query = supabase.from('lancamentos')
-          .select('id, data_hora, descricao, valor, forma_pagamento, tipo, caixas_sessoes(usuarios(nome))')
+          .select('id, data_hora, descricao, valor, forma_pagamento, tipo, caixas_sessoes!inner(usuario_id, usuarios(nome))')
           .gte('data_hora', start)
           .lte('data_hora', end)
           .order('data_hora', { ascending: false });
 
         if (tipoRelatorio === 'pagamento' && pagamentoSelecionado !== 'todos') {
           query = query.eq('forma_pagamento', pagamentoSelecionado);
+        }
+
+        // Se o usuário for caixa, força a busca apenas nos dados dele
+        if (meuPerfil?.tipo !== 'adm') {
+          query = query.eq('caixas_sessoes.usuario_id', meuPerfil.id);
         }
 
         const { data: lancs } = await query;
@@ -144,7 +165,7 @@ export default function TelaRelatorios() {
       else if (tipoRelatorio === 'caixas_sessoes') {
         let query = supabase.from('caixas_sessoes')
           .select(`
-            id, data_abertura, data_fechamento, valor_abertura, valor_fechamento, status,
+            id, data_abertura, data_fechamento, valor_abertura, valor_fechamento, status, usuario_id,
             usuarios(nome),
             lancamentos(tipo, valor, forma_pagamento)
           `)
@@ -152,7 +173,10 @@ export default function TelaRelatorios() {
           .lte('data_abertura', end)
           .order('data_abertura', { ascending: false });
 
-        if (usuarioSelecionado !== 'todos') {
+        // Se o usuário for caixa, força a busca apenas nos dados dele
+        if (meuPerfil?.tipo !== 'adm') {
+          query = query.eq('usuario_id', meuPerfil.id);
+        } else if (usuarioSelecionado !== 'todos') {
           query = query.eq('usuario_id', usuarioSelecionado);
         }
 
@@ -580,18 +604,21 @@ export default function TelaRelatorios() {
             <div>
               <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#4b5563', display: 'block', marginBottom: '5px' }}>Tipo de Relatório:</label>
               <select value={tipoRelatorio} onChange={(e) => { setTipoRelatorio(e.target.value); setDadosRelatorio([]); }} className="input-padrao" style={{ margin: 0, backgroundColor: 'white' }}>
-                <option value="caixas_sessoes">Abertura e Fechamento de Caixa</option>
-
-                <option value="fluxo_caixa">Fluxo de Caixa (Lançamentos Gerais)</option>
-
-                <option value="mais_vendidos">Produtos Mais Vendidos</option>
-                <option value="menos_vendidos">Produtos Menos Vendidos</option>
-                <option value="fornecedor">Produtos por Fornecedor</option>
-                <option value="estoque_zero">Produtos Sem Estoque (Zerados)</option>
-                <option value="categoria">Vendas por Categoria</option>
-                <option value="pagamento">Lançamentos por Forma de Pagamento</option>
                 <option value="estoque_minimo">Alerta de Estoque Mínimo</option>
-                <option value="validade">Controle de Validade do produto</option>
+                <option value="estoque_zero">Produtos Sem Estoque (Zerados)</option>
+                <option value="validade">Controle de Validade do Produto</option>
+                <option value="caixas_sessoes">Abertura e Fechamento de Caixa</option>
+                <option value="pagamento">Lançamentos por Forma de Pagamento</option>
+                
+                {meuPerfil?.tipo === 'adm' && (
+                  <>
+                    <option value="fluxo_caixa">Fluxo de Caixa (Lançamentos Gerais)</option>
+                    <option value="mais_vendidos">Produtos Mais Vendidos</option>
+                    <option value="menos_vendidos">Produtos Menos Vendidos</option>
+                    <option value="categoria">Vendas por Categoria</option>
+                    <option value="fornecedor">Produtos por Fornecedor</option>
+                  </>
+                )}
               </select>
             </div>
 
@@ -625,7 +652,7 @@ export default function TelaRelatorios() {
               </div>
             )}
 
-            {tipoRelatorio === 'caixas_sessoes' && (
+            {tipoRelatorio === 'caixas_sessoes' && meuPerfil?.tipo === 'adm' && (
               <div>
                 <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#4b5563', display: 'block', marginBottom: '5px' }}>Operador (Usuário):</label>
                 <select value={usuarioSelecionado} onChange={(e) => setUsuarioSelecionado(e.target.value)} className="input-padrao" style={{ margin: 0, backgroundColor: 'white' }}>
