@@ -16,7 +16,7 @@ import TelaUsuarios from './components/TelaUsuarios';
 import TelaRelatorios from './components/TelaRelatorios';
 import { ChartColumnBig } from 'lucide-react'; // Novo ícone!
 import { House } from 'lucide-react';
-import { FolderPen } from 'lucide-react';
+import { FolderPen, FileText } from 'lucide-react';
 
 
 // Ícones para a Navbar
@@ -145,7 +145,7 @@ function App() {
           )}
           {perfil.tipo === 'adm' && (
   <button onClick={() => navegarPara('relatorios')} className={telaAtual === 'relatorios' ? 'ativo' : ''}>
-    <ChartColumnBig size="20" /> Relatórios
+    <FileText size="20" />  Relatórios
   </button>
 )}
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
 export default function TelaLogin({ mostrarToast }) {
@@ -8,6 +8,29 @@ export default function TelaLogin({ mostrarToast }) {
   const [emailRecuperacao, setEmailRecuperacao] = useState(''); 
   const [loading, setLoading] = useState(false);
   const [modoRecuperacao, setModoRecuperacao] = useState(false);
+  
+  // Novos estados para a redefinição de senha
+  const [modoNovaSenha, setModoNovaSenha] = useState(false);
+  const [novaSenha, setNovaSenha] = useState('');
+
+  // Verifica se o usuário chegou nesta tela através de um link de recuperação
+  useEffect(() => {
+    // Escuta o evento oficial do Supabase de recuperação de senha
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setModoNovaSenha(true);
+      }
+    });
+
+    // Fallback: Verifica diretamente na URL se existe o parâmetro de recuperação
+    if (window.location.hash.includes('type=recovery')) {
+      setModoNovaSenha(true);
+    }
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -71,6 +94,7 @@ export default function TelaLogin({ mostrarToast }) {
     try {
       // Dispara o e-mail oficial de recuperação do Supabase
       const { error } = await supabase.auth.resetPasswordForEmail(emailRecuperacao, {
+        // Redireciona de volta para a raiz do seu site
         redirectTo: window.location.origin, 
       });
 
@@ -84,6 +108,36 @@ export default function TelaLogin({ mostrarToast }) {
       }
     } catch (err) {
       console.error('Erro ao recuperar senha:', err);
+      mostrarToast('Erro ao processar solicitação. Tente novamente.', 'erro');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Nova função para salvar a nova senha no banco do Supabase
+  const handleAtualizarSenha = async (e) => {
+    e.preventDefault();
+    if (novaSenha.length < 6) {
+      mostrarToast('A nova senha deve ter pelo menos 6 caracteres.', 'erro');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: novaSenha });
+
+      if (error) {
+        console.error('Erro ao atualizar senha:', error);
+        mostrarToast('Erro ao atualizar senha. O link pode ter expirado.', 'erro');
+      } else {
+        mostrarToast('Senha atualizada com sucesso! Você já pode entrar.', 'sucesso');
+        setModoNovaSenha(false);
+        setNovaSenha('');
+        setSenha(''); // Limpa a senha do form de login
+        // Limpa a URL para tirar o token gigante
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    } catch (err) {
       mostrarToast('Erro ao processar solicitação. Tente novamente.', 'erro');
     } finally {
       setLoading(false);
@@ -107,6 +161,43 @@ export default function TelaLogin({ mostrarToast }) {
     </label>
   );
 
+  // ==========================================
+  // TELA 3: CRIAR NOVA SENHA (VINDO DO LINK)
+  // ==========================================
+  if (modoNovaSenha) {
+    return (
+      <div className="tela-login">
+        <header>
+          <center>
+            <h1 style={{ color: '#10b981' }}>Nova Senha</h1>
+            <p>Crie uma nova senha de acesso para sua conta</p>
+          </center>
+        </header>
+        <form onSubmit={handleAtualizarSenha} className="form-padrao">
+          <div style={{ width: '100%' }}>
+            <Label htmlFor="nova-senha">Digite a Nova Senha</Label>
+            <input 
+              id="nova-senha"
+              type="password" 
+              placeholder="No mínimo 6 caracteres" 
+              value={novaSenha} 
+              onChange={(e) => setNovaSenha(e.target.value)} 
+              className="input-padrao" 
+              required 
+              minLength={6}
+            />
+          </div>
+          <button type="submit" className="btn-entrada" style={{ backgroundColor: '#10b981' }} disabled={loading}>
+            {loading ? 'Salvando...' : 'SALVAR E ENTRAR'}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // TELA 2: SOLICITAR RECUPERAÇÃO DE SENHA
+  // ==========================================
   if (modoRecuperacao) {
     return (
       <div className="tela-login">
@@ -122,7 +213,7 @@ export default function TelaLogin({ mostrarToast }) {
             <input 
               id="email-recuperacao"
               type="email" 
-              placeholder="exemplo@email.com" 
+              placeholder="" 
               value={emailRecuperacao} 
               onChange={(e) => setEmailRecuperacao(e.target.value)} 
               className="input-padrao" 
@@ -149,6 +240,9 @@ export default function TelaLogin({ mostrarToast }) {
     );
   }
 
+  // ==========================================
+  // TELA 1: LOGIN PADRÃO
+  // ==========================================
   return (
     <div className="tela-login">
       <header>
