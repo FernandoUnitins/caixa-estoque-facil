@@ -575,6 +575,9 @@ export default function TelaProdutos({ mostrarToast, perfil }) {
             <><IconSearch size="18" /> BUSCAR PRODUTOS</>
           )}
         </button>
+        <button className="btn-entrada" onClick={() => abrirFormulario()} style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          CADASTRAR NOVO PRODUTO
+        </button>
       </form>
 
       {buscaRealizada && !buscando && produtos.length > 0 && (
@@ -661,9 +664,7 @@ export default function TelaProdutos({ mostrarToast, perfil }) {
           </div>
         ))}
 
-        <button className="btn-entrada" onClick={() => abrirFormulario()} style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-          CADASTRAR NOVO PRODUTO
-        </button>
+        
       </div>
     </main>
   );
