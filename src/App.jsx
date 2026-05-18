@@ -14,10 +14,9 @@ import TelaFormasPagamento from './components/TelaFormasPagamento';
 import TelaPerfil from './components/TelaPerfil';
 import TelaUsuarios from './components/TelaUsuarios';
 import TelaRelatorios from './components/TelaRelatorios';
-import { ChartColumnBig } from 'lucide-react'; // Novo ícone!
+import { ChartColumnBig } from 'lucide-react'; 
 import { House } from 'lucide-react';
 import { FolderPen, FileText } from 'lucide-react';
-
 
 // Ícones para a Navbar
 const IconMenu = () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
@@ -31,7 +30,6 @@ const IconLock = () => <svg width="48" height="48" fill="none" stroke="#ef4444" 
 const IconLogOut = ({ size = "18", color = "currentColor" }) => <svg width={size} height={size} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
 const IconSettings = ({ color = "currentColor" }) => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>;
 
-
 function App() {
   const [session, setSession] = useState(null);
   const [perfil, setPerfil] = useState(null);
@@ -39,6 +37,9 @@ function App() {
   const [subTela, setSubTela] = useState(null);
   const [toast, setToast] = useState({ visivel: false, mensagem: '', tipo: '' });
   
+  // ESTADO NOVO: Trava a tela caso o usuário esteja redefinindo a senha
+  const [recuperandoSenha, setRecuperandoSenha] = useState(false);
+
   const [sessaoCaixa, setSessaoCaixa] = useState(null);
   const [valorAbertura, setValorAbertura] = useState('');
   const [loadingCaixa, setLoadingCaixa] = useState(false);
@@ -51,15 +52,39 @@ function App() {
   };
 
   useEffect(() => {
+    let isRecovering = window.location.hash.includes('type=recovery');
+    if (isRecovering) setRecuperandoSenha(true);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) carregarDadosIniciais(session.user.id);
+      if (session && !isRecovering) carregarDadosIniciais(session.user.id);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
-      if (session) carregarDadosIniciais(session.user.id);
-      else { setPerfil(null); setSessaoCaixa(null); setTelaAtual(''); setSubTela(null); }
+      
+      // Se o Supabase avisar que é recuperação, travamos a tela de Login
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecuperandoSenha(true);
+        isRecovering = true;
+      } 
+      
+      // Se avisar que o usuário atualizou os dados (nova senha salva), liberamos o app
+      if (event === 'USER_UPDATED') {
+        setRecuperandoSenha(false);
+        isRecovering = false;
+      }
+
+      if (session && !isRecovering) {
+        carregarDadosIniciais(session.user.id);
+      } else if (!session) { 
+        setPerfil(null); 
+        setSessaoCaixa(null); 
+        setTelaAtual(''); 
+        setSubTela(null); 
+      }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -96,7 +121,10 @@ function App() {
     await supabase.auth.signOut();
   };
 
-  if (!session) {
+  // ==========================================
+  // PROTEÇÃO DA TELA DE LOGIN / RECUPERAÇÃO
+  // ==========================================
+  if (!session || recuperandoSenha) {
     return (
       <div className="app-container auth-container">
         {toast.visivel && <div className={`toast-container toast-${toast.tipo}`}>{toast.mensagem}</div>}
@@ -144,10 +172,10 @@ function App() {
             <button onClick={() => navegarPara('cadastros')} className={telaAtual === 'cadastros' ? 'ativo' : ''}><IconSettings /> Configurações</button>
           )}
           {perfil.tipo === 'adm' && (
-  <button onClick={() => navegarPara('relatorios')} className={telaAtual === 'relatorios' ? 'ativo' : ''}>
-    <FileText size="20" />  Relatórios
-  </button>
-)}
+            <button onClick={() => navegarPara('relatorios')} className={telaAtual === 'relatorios' ? 'ativo' : ''}>
+              <FileText size="20" />  Relatórios
+            </button>
+          )}
 
           <div className="navbar-user-info">
             <span><IconUser /> {perfil.nome}</span>
@@ -165,10 +193,10 @@ function App() {
             <button onClick={() => navegarPara('caixa')}><IconCaixa /> Caixa</button>
             {mostrarMenuCadastros && <button onClick={() => navegarPara('cadastros')}><IconSettings /> Configurações</button>}
             {perfil.tipo === 'adm' && (
-  <button onClick={() => navegarPara('relatorios')}>
-    <ChartColumnBig size="20" /> Relatórios
-  </button>
-)}
+              <button onClick={() => navegarPara('relatorios')}>
+                <ChartColumnBig size="20" /> Relatórios
+              </button>
+            )}
             <button onClick={() => { setMenuAberto(false); setModalLogout(true); }} style={{color: '#ef4444', borderTop: '1px dashed #eee', marginTop: '10px'}}>
               <IconLogOut /> Sair
             </button>
@@ -225,4 +253,3 @@ function App() {
   );
 }
 export default App;
-
