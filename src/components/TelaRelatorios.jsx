@@ -405,8 +405,6 @@ export default function TelaRelatorios() {
     'validade': 'Controle de Validades no Período'
   }[tipoRelatorio];
 
-  // Adicionada a classe ".apenas-impressao" com "display: none" no visual normal
-  // e forçando a exibição dela SOMENTE dentro da media print
   const printStyles = `
     .apenas-impressao { display: none; }
     
@@ -540,8 +538,8 @@ export default function TelaRelatorios() {
                   style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', height: '100%', width: '12%', gap: '2px', cursor: 'pointer' }}
                 >
                   <div style={{ display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'flex-end', height: '100%', gap: '2px' }}>
-                    <div title={`Entradas: ${formatarMoeda(dia.entradas)}`} style={{ backgroundColor: '#10b981', width: '45%', borderRadius: '4px 4px 0 0', height: `${(dia.entradas / maiorValorGrafico) * 100}%`, minHeight: '4px', transition: 'height 1s ease-out' }}></div>
-                    <div title={`Saídas: ${formatarMoeda(dia.saidas)}`} style={{ backgroundColor: '#ef4444', width: '45%', borderRadius: '4px 4px 0 0', height: `${(dia.saidas / maiorValorGrafico) * 100}%`, minHeight: '4px', transition: 'height 1s ease-out' }}></div>
+                    <div title={`Entradas: ${formatarMoeda(dia.entradas)}`} style={{ backgroundColor: '#10b981', width: '45%', borderRadius: '4px 4px 0 0', height: dia.entradas > 0 ? Math.max((dia.entradas / maiorValorGrafico) * 100, 8) + '%' : '0%', transition: 'height 1s ease-out' }}></div>
+                    <div title={`Saídas: ${formatarMoeda(dia.saidas)}`} style={{ backgroundColor: '#ef4444', width: '45%', borderRadius: '4px 4px 0 0', height: dia.saidas > 0 ? Math.max((dia.saidas / maiorValorGrafico) * 100, 8) + '%' : '0%', transition: 'height 1s ease-out' }}></div>
                   </div>
                 </div>
               ))}
