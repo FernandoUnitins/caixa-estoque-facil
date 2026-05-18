@@ -588,18 +588,9 @@ export default function TelaRelatorios() {
                 <option value="menos_vendidos">Produtos Menos Vendidos</option>
                 <option value="fornecedor">Produtos por Fornecedor</option>
                 <option value="estoque_zero">Produtos Sem Estoque (Zerados)</option>
-                
                 <option value="categoria">Vendas por Categoria</option>
-
-                
-
                 <option value="pagamento">Lançamentos por Forma de Pagamento</option>
-
-                
-
-
                 <option value="estoque_minimo">Alerta de Estoque Mínimo</option>
-
                 <option value="validade">Controle de Validade do produto</option>
               </select>
             </div>

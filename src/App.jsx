@@ -194,7 +194,7 @@ function App() {
             {mostrarMenuCadastros && <button onClick={() => navegarPara('cadastros')}><IconSettings /> Configurações</button>}
             {perfil.tipo === 'adm' && (
               <button onClick={() => navegarPara('relatorios')}>
-                <ChartColumnBig size="20" /> Relatórios
+                <FileText size="20" /> Relatórios
               </button>
             )}
             <button onClick={() => { setMenuAberto(false); setModalLogout(true); }} style={{color: '#ef4444', borderTop: '1px dashed #eee', marginTop: '10px'}}>
