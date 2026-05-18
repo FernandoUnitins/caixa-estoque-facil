@@ -92,17 +92,19 @@ export default function TelaCategorias({ mostrarToast }) {
         
         <form onSubmit={salvarCategoria} className="form-padrao" style={{ marginTop: '20px' }}>
           
+          <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#4b5563', display: 'block', marginBottom: '4px' }}>Nome da Categoria</label>
           <input 
             type="text" 
-            placeholder="NOME DA CATEGORIA (EX: BEBIDAS)" 
+            placeholder="" 
             value={form.nome} 
             onChange={(e) => setForm({ ...form, nome: e.target.value.toUpperCase() })} 
             className="input-padrao" 
             required
           />
           
+          <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#4b5563', display: 'block', marginBottom: '4px', marginTop: '10px' }}>Observação (Opcional)</label>
           <textarea 
-            placeholder="Observação (opcional)" 
+            placeholder="" 
             value={form.observacao || ''} 
             onChange={(e) => setForm({ ...form, observacao: e.target.value })} 
             className="input-padrao"
@@ -194,7 +196,7 @@ export default function TelaCategorias({ mostrarToast }) {
           onClick={() => abrirFormulario()} 
           style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
         >
-          <IconPlus /> NOVA CATEGORIA
+           NOVA CATEGORIA
         </button>
       </div>
     </main>

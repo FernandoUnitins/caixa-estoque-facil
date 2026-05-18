@@ -97,14 +97,21 @@ export default function TelaUsuarios({ mostrarToast }) {
       <main className="tela">
         <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><IconUser /> {form.id ? 'GERENCIAR' : 'NOVO'} USUÁRIO</h2>
         <form onSubmit={salvarUsuario} className="form-padrao">
-          <input type="text" placeholder="Nome Completo" value={form.nome} onChange={e => setForm({...form, nome: e.target.value})} className="input-padrao" required />
+          <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#4b5563', display: 'block', marginBottom: '4px' }}>Nome Completo</label>
+          <input type="text" placeholder="" value={form.nome} onChange={e => setForm({...form, nome: e.target.value})} className="input-padrao" required />
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-             <input type="text" placeholder="Login (Ex: caixa01)" value={form.username} onChange={e => setForm({...form, username: e.target.value})} className="input-padrao" required />
-             <input type="email" placeholder="E-mail" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="input-padrao" required />
+             <div>
+               <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#4b5563', display: 'block', marginBottom: '4px' }}>Login</label>
+               <input type="text" placeholder="" value={form.username} onChange={e => setForm({...form, username: e.target.value})} className="input-padrao" required />
+             </div>
+             <div>
+               <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#4b5563', display: 'block', marginBottom: '4px' }}>E-mail de recuperação de senha</label>
+               <input type="email" placeholder=" " value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="input-padrao" required />
+             </div>
           </div>
 
-          <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#4b5563' }}>Nível de Acesso</label>
+          <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#4b5563', display: 'block', marginBottom: '4px' }}>Tipo de Usuário</label>
           <select value={form.tipo} onChange={e => setForm({...form, tipo: e.target.value})} className="input-padrao">
             <option value="caixa">CAIXA (OPERADOR)</option>
             <option value="adm">ADMINISTRADOR (DONO)</option>
@@ -119,7 +126,7 @@ export default function TelaUsuarios({ mostrarToast }) {
 
           {form.tipo === 'caixa' && (
             <div style={{ padding: '15px', backgroundColor: '#f3f4f6', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '6px' }}><IconShield /> PERMISSÕES DE TELA</label>
+              <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '6px' }}><IconShield /> PERMISSÕES DE ACESSO</label>
               <CheckPerm label="Gerenciar Produtos" name="perm_produtos" />
               <CheckPerm label="Gerenciar Fornecedores" name="perm_fornecedores" />
               <CheckPerm label="Gerenciar Categorias" name="perm_categorias" />
@@ -138,7 +145,9 @@ export default function TelaUsuarios({ mostrarToast }) {
 
   return (
     <main className="tela">
-      <h2><IdCardLanyard strokeWidth="1px" width="40" height="40" /> GESTÃO DE USUÁRIOS</h2>
+
+            <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#4b5563', margin: 0 }}>
+<IdCardLanyard strokeWidth="1px" width="40" height="40" /> GESTÃO DE USUÁRIOS</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
         {usuarios.map(u => (
           <div key={u.id} onClick={() => { setForm(u); setTelaAtual('form'); }} style={{ backgroundColor: '#f9fafb', padding: '15px', borderRadius: '12px', border: '1px solid #e5e7eb', cursor: 'pointer', opacity: u.ativo ? 1 : 0.5 }}>
@@ -149,7 +158,7 @@ export default function TelaUsuarios({ mostrarToast }) {
             <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '5px' }}>Login: @{u.username} | {u.email}</p>
           </div>
         ))}
-        <button onClick={() => { setForm(estadoInicial); setTelaAtual('form'); }} className="btn-entrada" style={{ marginTop: '10px' }}>+ NOVO USUÁRIO</button>
+        <button onClick={() => { setForm(estadoInicial); setTelaAtual('form'); }} className="btn-entrada" style={{ marginTop: '10px' }}> NOVO USUÁRIO</button>
       </div>
     </main>
   );

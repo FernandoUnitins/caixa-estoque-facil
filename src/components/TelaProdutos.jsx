@@ -14,6 +14,7 @@ const IconCheck = ({ color = "currentColor", size = "24" }) => <svg width={size}
 const IconClose = ({ color = "currentColor", size = "24" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
 const IconPlus = ({ color = "currentColor", size = "24" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 const IconMinus = ({ color = "currentColor", size = "24" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
+const IconAlertTriangle = ({ color = "currentColor", size = "24" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
 
 export default function TelaProdutos({ mostrarToast, perfil }) {
 
@@ -39,8 +40,11 @@ export default function TelaProdutos({ mostrarToast, perfil }) {
   const [imagemArquivo, setImagemArquivo] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   
+  // Novo estado para o Modal de Confirmação de Inativação
+  const [modalConfirmacao, setModalConfirmacao] = useState(false);
+  
   const scannerRef = useRef(null);
-  const tradutorIntervalRef = useRef(null); // <--- Referência para o nosso tradutor
+  const tradutorIntervalRef = useRef(null); 
 
   const gerarCodigoInterno = () => 'PRD-' + Math.floor(1000 + Math.random() * 9000);
 
@@ -131,6 +135,16 @@ export default function TelaProdutos({ mostrarToast, perfil }) {
     setForm({ ...form, [name]: value });
   };
 
+  // Intercepta o clique no checkbox de Ativo/Inativo
+  const handleToggleAtivo = (e) => {
+    const isChecked = e.target.checked;
+    if (!isChecked) {
+      setModalConfirmacao(true); // O usuário tentou desmarcar -> Abre o Modal
+    } else {
+      setForm({ ...form, ativo: true }); // O usuário está ativando -> Pode marcar direto
+    }
+  };
+
   const handleImagem = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -159,9 +173,6 @@ export default function TelaProdutos({ mostrarToast, perfil }) {
     };
   };
 
-  // ==========================================
-  // FUNÇÃO DE CÂMERA E TRADUTOR EM TEMPO REAL
-  // ==========================================
   const iniciarLeitor = () => {
     setIsScanning(true);
     
@@ -339,6 +350,33 @@ export default function TelaProdutos({ mostrarToast, perfil }) {
   if (telaAtual === 'form') {
     return (
       <main className="tela" style={{ paddingBottom: '30px', width: '100%', overflowX: 'hidden' }}>
+        
+        {/* MODAL DE CONFIRMAÇÃO DE INATIVAÇÃO */}
+        {modalConfirmacao && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '20px', width: '90%', maxWidth: '350px', textAlign: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
+                <IconAlertTriangle color="#ef4444" size="48" />
+              </div>
+              <h3 style={{ color: '#374151', marginBottom: '10px' }}>Inativar Produto?</h3>
+              <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '25px' }}>
+                Tem certeza que deseja inativar este produto? <br/>Ele não aparecerá mais para vendas no Frente de Caixa.
+              </p>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="button" onClick={() => setModalConfirmacao(false)} className="btn-secundario" style={{ flex: 1, margin: 0 }}>CANCELAR</button>
+                <button 
+                  type="button" 
+                  onClick={() => { setForm({ ...form, ativo: false }); setModalConfirmacao(false); }} 
+                  className="btn-entrada" 
+                  style={{ flex: 1, margin: 0, backgroundColor: '#ef4444' }}
+                >
+                  SIM, INATIVAR
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#4b5563' }}>
           <IconBox size="24" /> {form.id ? 'EDITAR PRODUTO' : 'NOVO PRODUTO'}
         </h2>
@@ -477,7 +515,7 @@ export default function TelaProdutos({ mostrarToast, perfil }) {
           
           {form.id && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', padding: '10px', backgroundColor: form.ativo ? '#ecfdf5' : '#fef2f2', borderRadius: '12px', border: `1px solid ${form.ativo ? '#10b981' : '#ef4444'}` }}>
-              <input type="checkbox" name="ativo" checked={form.ativo} onChange={handleChange} id="chkAtivoProd" style={{ transform: 'scale(1.5)', marginLeft: '10px' }} />
+              <input type="checkbox" name="ativo" checked={form.ativo} onChange={handleToggleAtivo} id="chkAtivoProd" style={{ transform: 'scale(1.5)', marginLeft: '10px' }} />
               <label htmlFor="chkAtivoProd" style={{ fontWeight: '700', color: form.ativo ? '#10b981' : '#ef4444', cursor: 'pointer' }}>
                 {form.ativo ? 'PRODUTO ESTÁ ATIVO NA LOJA' : 'PRODUTO INATIVO (Oculto)'}
               </label>
@@ -624,7 +662,7 @@ export default function TelaProdutos({ mostrarToast, perfil }) {
         ))}
 
         <button className="btn-entrada" onClick={() => abrirFormulario()} style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-          <IconPlus size="20" /> CADASTRAR NOVO PRODUTO
+          CADASTRAR NOVO PRODUTO
         </button>
       </div>
     </main>

@@ -150,7 +150,7 @@ export default function TelaFormasPagamento({ mostrarToast }) {
           <label style={{ fontSize: '0.8rem', fontWeight: '600', color: '#4b5563', paddingLeft: '4px' }}>NOME DA FORMA DE PAGAMENTO</label>
           <input 
             type="text" 
-            placeholder="EX: PIX, DINHEIRO, CARTÃO CRÉDITO" 
+            placeholder="" 
             value={form.nome} 
             onChange={(e) => setForm({ ...form, nome: e.target.value.toUpperCase() })} 
             className="input-padrao" 
@@ -240,7 +240,7 @@ export default function TelaFormasPagamento({ mostrarToast }) {
           onClick={() => abrirFormulario()} 
           style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
         >
-          <IconPlus /> NOVA FORMA DE PAGAMENTO
+          NOVA FORMA DE PAGAMENTO
         </button>
       </div>
     </main>
