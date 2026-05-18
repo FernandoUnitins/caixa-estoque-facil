@@ -153,7 +153,7 @@ export default function TelaLogin({ mostrarToast }) {
     <div className="tela-login">
       <header>
         <center>
-          <h1>Caixa & Estoque Fácil</h1>
+          <h1>Mini Mercado Feitosa</h1>
           <h2>Acesso ao Sistema</h2>
         </center>
       </header>

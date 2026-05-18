@@ -33,7 +33,7 @@ const IconPower = ({ color = "currentColor", size = "20" }) => <svg width={size}
 const IconCheckCircle = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
 const IconAlertTriangle = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
 const IconList = ({ color = "currentColor", size = "20" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>;
-const IconCaixa = () => <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dollar-sign-circle-icon lucide-dollar-sign-circle"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+const IconCaixa = () => <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-dollar-sign-circle-icon lucide-dollar-sign-circle"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>;
 
 // ==========================================
 // COMPONENTES AUXILIARES
@@ -51,7 +51,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
   
   const [isScanning, setIsScanning] = useState(false);
   const scannerRef = useRef(null);
-  const tradutorIntervalRef = useRef(null); // <--- Referência para o nosso tradutor
+  const tradutorIntervalRef = useRef(null);
   const [loading, setLoading] = useState(false);
 
   // Estados dos Modais
@@ -172,9 +172,6 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
     setResultadosBusca([]);
   };
 
-  // ==========================================
-  // FUNÇÃO DE CÂMERA E TRADUTOR EM TEMPO REAL
-  // ==========================================
   const abrirLeitor = () => {
     setIsScanning(true);
     
@@ -189,7 +186,6 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
         }, () => {});
       }
 
-      // Inicia a função que traduz o componente em inglês automaticamente
       tradutorIntervalRef.current = setInterval(() => {
         const elementos = document.querySelectorAll('#reader-pdv span, #reader-pdv button, #reader-pdv a, #reader-pdv div');
         elementos.forEach(el => {
@@ -328,30 +324,45 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
     setLoading(false);
   };
 
+  // ==========================================
+  // PREPARAÇÃO INTELIGENTE DO FECHAMENTO DE CAIXA
+  // ==========================================
   const prepararFechamento = async () => {
     setLoading(true);
     setValorContadoFechamento('');
     
-    const { data, error } = await supabase.from('lancamentos').select('tipo, valor').eq('sessao_id', sessaoCaixa.id);
+    const { data, error } = await supabase.from('lancamentos').select('tipo, valor, forma_pagamento').eq('sessao_id', sessaoCaixa.id);
     
-    let totalEntradas = 0;
+    let totalEntradasDinheiro = 0;
+    let totalEntradasOutros = 0;
     let totalSaidas = 0;
 
     if (data && !error) {
       data.forEach(l => {
-        if (l.tipo === 'ENTRADA' || l.tipo === 'REFORCO') totalEntradas += Number(l.valor);
-        if (l.tipo === 'SAIDA' || l.tipo === 'SANGRIA') totalSaidas += Number(l.valor);
+        if (l.tipo === 'REFORCO') {
+            totalEntradasDinheiro += Number(l.valor);
+        } else if (l.tipo === 'ENTRADA') {
+            // Verifica se a forma de pagamento é DINHEIRO (ignora cartões e PIX para o saldo da gaveta)
+            if (l.forma_pagamento && l.forma_pagamento.toUpperCase().includes('DINHEIRO')) {
+                totalEntradasDinheiro += Number(l.valor);
+            } else {
+                totalEntradasOutros += Number(l.valor);
+            }
+        } else if (l.tipo === 'SAIDA' || l.tipo === 'SANGRIA') {
+            totalSaidas += Number(l.valor);
+        }
       });
     }
 
     const valorAbertura = Number(sessaoCaixa.valor_abertura);
-    const esperado = valorAbertura + totalEntradas - totalSaidas;
+    const esperadoGaveta = valorAbertura + totalEntradasDinheiro - totalSaidas;
 
     setResumoFechamento({
       abertura: valorAbertura,
-      entradas: totalEntradas,
+      entradasDinheiro: totalEntradasDinheiro,
+      entradasOutros: totalEntradasOutros,
       saidas: totalSaidas,
-      esperado: esperado
+      esperado: esperadoGaveta
     });
 
     setModalGerenciar(false);
@@ -585,7 +596,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
         </Overlay>
       )}
 
-      {/* NOVO MODAL: LISTA DE LANÇAMENTOS DO CAIXA COM TOTAL CALCULADO E CONTAGEM */}
+      {/* NOVO MODAL: LISTA DE LANÇAMENTOS DO CAIXA */}
       {modalLancamentos && !modalDetalhes && (
         <Overlay>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', width: '90%', maxWidth: '450px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
@@ -748,29 +759,7 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
         </Overlay>
       )}
 
-      {/* DEMAIS MODAIS (Operações, Fechamento e Edição de Item) */}
-      {modalOperacaoFisica && (
-        <Overlay>
-          <form onSubmit={salvarOperacaoCaixa} style={{ backgroundColor: 'white', padding: '25px', borderRadius: '20px', width: '90%', maxWidth: '350px' }}>
-            <h3 style={{ textAlign: 'center', marginBottom: '15px', color: modalOperacaoFisica === 'REFORCO' ? '#10b981' : '#ef4444' }}>
-              {modalOperacaoFisica === 'REFORCO' ? 'INSERIR DINHEIRO' : modalOperacaoFisica === 'SANGRIA' ? 'RETIRAR DINHEIRO' : 'REGISTAR DESPESA'}
-            </h3>
-            <LabelCampo>Valor (R$)</LabelCampo>
-            <input type="text" value={valorOperacao} onChange={e => setValorOperacao(mascaraMoeda(e.target.value))} className="input-padrao" placeholder="0,00" required style={{ fontSize: '1.2rem', textAlign: 'center', marginTop: '5px' }} inputMode="numeric" />
-            <div style={{ marginTop: '15px' }}>
-              <LabelCampo>Observação (Ex: Papelaria, Fundo Troco)</LabelCampo>
-              <textarea value={obsOperacao} onChange={e => setObsOperacao(e.target.value.toUpperCase())} className="input-padrao" rows="2" style={{ marginTop: '5px' }} required={modalOperacaoFisica === 'SAIDA' || modalOperacaoFisica === 'SANGRIA'} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '20px' }}>
-              <button type="button" onClick={() => { setModalOperacaoFisica(null); setValorOperacao(''); setObsOperacao(''); }} className="btn-secundario" style={{ margin: 0 }}>CANCELAR</button>
-              <button type="submit" className="btn-entrada" disabled={loading} style={{ margin: 0, backgroundColor: modalOperacaoFisica === 'REFORCO' ? '#10b981' : '#ef4444' }}>
-                {loading ? 'AGUARDE...' : 'CONFIRMAR'}
-              </button>
-            </div>
-          </form>
-        </Overlay>
-      )}
-
+      {/* MODAL PARA FECHAMENTO DE CAIXA */}
       {modalFechamento && resumoFechamento && (
         <Overlay>
           <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '20px', width: '90%', maxWidth: '400px', textAlign: 'center' }}>
@@ -782,20 +771,26 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
                 <strong style={{ color: '#374151' }}>R$ {formatarMoedaExibicao(resumoFechamento.abertura)}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: '#10b981' }}>(+) Entradas/Reforços:</span>
-                <strong style={{ color: '#10b981' }}>R$ {formatarMoedaExibicao(resumoFechamento.entradas)}</strong>
+                <span style={{ color: '#10b981' }}>(+) Entradas em Dinheiro/Reforço:</span>
+                <strong style={{ color: '#10b981' }}>R$ {formatarMoedaExibicao(resumoFechamento.entradasDinheiro)}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
                 <span style={{ color: '#ef4444' }}>(-) Saídas/Sangrias:</span>
                 <strong style={{ color: '#ef4444' }}>R$ {formatarMoedaExibicao(resumoFechamento.saidas)}</strong>
               </div>
+              
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px dashed #d1d5db' }}>
-                <span style={{ fontWeight: 'bold', color: '#4b5563' }}>ESPERADO NA GAVETA:</span>
+                <span style={{ fontWeight: 'bold', color: '#4b5563' }}>ESPERADO NA GAVETA (Físico):</span>
                 <strong style={{ color: '#4f46e5', fontSize: '1.1rem' }}>R$ {formatarMoedaExibicao(resumoFechamento.esperado)}</strong>
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '10px', marginTop: '10px', borderTop: '1px solid #e5e7eb' }}>
+                <span style={{ color: '#6b7280', fontSize: '0.8rem' }}>Outras Entradas (Cartão/Pix):</span>
+                <strong style={{ color: '#6b7280', fontSize: '0.85rem' }}>R$ {formatarMoedaExibicao(resumoFechamento.entradasOutros)}</strong>
               </div>
             </div>
 
-            <p style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '10px' }}>Conte o dinheiro físico e informe abaixo:</p>
+            <p style={{ color: '#6b7280', fontSize: '0.85rem', marginBottom: '10px' }}>Conte o <strong>dinheiro físico</strong> e informe abaixo:</p>
             <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f3f4f6', borderRadius: '12px', border: '1px solid #d1d5db', overflow: 'hidden', marginBottom: '15px' }}>
                <span style={{ padding: '0 15px', fontWeight: 'bold', color: '#6b7280' }}>R$</span>
                <input type="text" value={valorContadoFechamento} onChange={e => setValorContadoFechamento(mascaraMoeda(e.target.value))} style={{ flex: 1, border: 'none', padding: '15px 15px 15px 0', background: 'none', outline: 'none', fontSize: '1.3rem', fontWeight: 'bold' }} placeholder="0,00" inputMode="numeric" />
@@ -803,14 +798,15 @@ export default function TelaEntrada({ setTelaAtual, mostrarToast, sessaoCaixa, o
 
             {valorContadoFechamento.trim() !== '' && (
               (() => {
-                const contado = parseMoeda(valorContadoFechamento);
-                const diff = contado - resumoFechamento.esperado;
+                const contadoCents = Math.round(parseMoeda(valorContadoFechamento) * 100);
+                const esperadoCents = Math.round(resumoFechamento.esperado * 100);
+                const diffCents = contadoCents - esperadoCents;
                 
-                if (diff === 0) return <p style={{ color: '#10b981', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}><IconCheckCircle color="#10b981" /> Caixa bateu perfeitamente!</p>;
+                if (diffCents === 0) return <p style={{ color: '#10b981', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}><IconCheckCircle color="#10b981" /> Caixa bateu perfeitamente!</p>;
                 
-                if (diff > 0) return <p style={{ color: '#10b981', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}><IconPlus color="#10b981" /> Sobra de R$ {formatarMoedaExibicao(diff)}</p>;
+                if (diffCents > 0) return <p style={{ color: '#10b981', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}><IconPlus color="#10b981" /> Sobra de R$ {formatarMoedaExibicao(diffCents / 100)}</p>;
                 
-                return <p style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}><IconAlertTriangle color="#ef4444" /> Quebra (Falta) de R$ {formatarMoedaExibicao(Math.abs(diff))}</p>;
+                return <p style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}><IconAlertTriangle color="#ef4444" /> Quebra (Falta) de R$ {formatarMoedaExibicao(Math.abs(diffCents) / 100)}</p>;
               })()
             )}
 
