@@ -148,6 +148,8 @@ export default function TelaUsuarios({ mostrarToast }) {
 
             <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#4b5563', margin: 0 }}>
 <IdCardLanyard strokeWidth="1px" width="40" height="40" /> GESTÃO DE USUÁRIOS</h2>
+        <button onClick={() => { setForm(estadoInicial); setTelaAtual('form'); }} className="btn-entrada" style={{ marginTop: '10px' }}> NOVO USUÁRIO</button>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
         {usuarios.map(u => (
           <div key={u.id} onClick={() => { setForm(u); setTelaAtual('form'); }} style={{ backgroundColor: '#f9fafb', padding: '15px', borderRadius: '12px', border: '1px solid #e5e7eb', cursor: 'pointer', opacity: u.ativo ? 1 : 0.5 }}>
@@ -158,7 +160,6 @@ export default function TelaUsuarios({ mostrarToast }) {
             <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '5px' }}>Login: @{u.username} | {u.email}</p>
           </div>
         ))}
-        <button onClick={() => { setForm(estadoInicial); setTelaAtual('form'); }} className="btn-entrada" style={{ marginTop: '10px' }}> NOVO USUÁRIO</button>
       </div>
     </main>
   );

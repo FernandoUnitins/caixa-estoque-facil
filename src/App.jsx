@@ -163,6 +163,7 @@ function App() {
         </div>
 
         <nav className="nav-links-desktop">
+          
           {perfil.tipo === 'adm' && (
             <button onClick={() => navegarPara('resumo')} className={telaAtual === 'resumo' ? 'ativo' : ''}><House /> Início</button>
           )}
@@ -184,6 +185,7 @@ function App() {
         </nav>
 
         <button className="btn-hamburguer" onClick={() => setMenuAberto(!menuAberto)}>
+          <span><IconUser /> {perfil.nome}</span>
           {menuAberto ? <IconClose /> : <IconMenu />}
         </button>
 
