@@ -600,19 +600,18 @@ export default function TelaRelatorios() {
               <select value={tipoRelatorio} onChange={(e) => { setTipoRelatorio(e.target.value); setDadosRelatorio([]); }} className="input-padrao" style={{ margin: 0, backgroundColor: 'white' }}>
                 {/* Opção nula adicionada para forçar o usuário a pre-selecionar */}
                 <option value="" disabled>Selecione um relatório...</option>
-                <option value="estoque_minimo">Alerta de Estoque Mínimo</option>
-                <option value="estoque_zero">Produtos Sem Estoque (Zerados)</option>
-                <option value="validade">Controle de Validade do Produto</option>
                 <option value="caixas_sessoes">Abertura e Fechamento de Caixa</option>
                 <option value="pagamento">Lançamentos por Forma de Pagamento</option>
-                
+                <option value="estoque_zero">Produtos Sem Estoque (Zerados)</option>
+                <option value="validade">Controle de Validade do Produto</option>
+                <option value="estoque_minimo">Alerta de Estoque Mínimo</option>
                 {meuPerfil?.tipo === 'adm' && (
                   <>
                     <option value="fluxo_caixa">Fluxo de Caixa (Lançamentos Gerais)</option>
                     <option value="mais_vendidos">Produtos Mais Vendidos</option>
                     <option value="menos_vendidos">Produtos Menos Vendidos</option>
-                    <option value="categoria">Vendas por Categoria</option>
                     <option value="fornecedor">Produtos por Fornecedor</option>
+                    <option value="categoria">Vendas por Categoria</option>
                   </>
                 )}
               </select>
