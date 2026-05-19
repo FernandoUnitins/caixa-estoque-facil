@@ -404,8 +404,7 @@ export default function TelaProdutos({ mostrarToast, perfil }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <LabelCampo>Código de Barras</LabelCampo>
             <div style={{ display: 'flex', gap: '5px' }}>
-              <input type="text" name="codigo_barras" value={form.codigo_barras} onChange={handleChange} className="input-padrao" style={{ flex: 1, minWidth: 0 }} />
-              <button type="button" onClick={iniciarLeitor} style={{ width: '50px', padding: '0', backgroundColor: '#374151', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none' }} title="Ler Código">
+            <input type="text" name="codigo_barras" value={form.codigo_barras} onChange={handleChange} className="input-padrao" style={{ flex: 1, minWidth: 0 }} inputMode="numeric" />              <button type="button" onClick={iniciarLeitor} style={{ width: '50px', padding: '0', backgroundColor: '#374151', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none' }} title="Ler Código">
                 <IconCamera color="white" size="20" />
               </button>
             </div>
