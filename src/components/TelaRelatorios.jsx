@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { 
-  BarChart3, FileText, Printer, TrendingUp, TrendingDown, Search 
+  FileText, Printer 
 } from 'lucide-react';
 
 export default function TelaRelatorios() {
@@ -22,7 +22,8 @@ export default function TelaRelatorios() {
   const [fornecedores, setFornecedores] = useState([]);
   const [usuarios, setUsuarios] = useState([]); 
   
-  const [tipoRelatorio, setTipoRelatorio] = useState('fluxo_caixa'); 
+  // Ajustado para começar totalmente vazio e forçar a seleção
+  const [tipoRelatorio, setTipoRelatorio] = useState(''); 
   const [dataInicioRel, setDataInicioRel] = useState(primeiroDiaMes);
   const [dataFimRel, setDataFimRel] = useState(ultimoDiaMes);
   
@@ -48,16 +49,9 @@ export default function TelaRelatorios() {
 
     // 1. Identifica o usuário logado para aplicar permissões
     const { data: { user } } = await supabase.auth.getUser();
-    let perfilAtual = null;
     if (user) {
       const { data: p } = await supabase.from('usuarios').select('*').eq('id', user.id).single();
       setMeuPerfil(p);
-      perfilAtual = p;
-      
-      // Se for caixa, muda o relatório inicial padrão para algo que ele tenha acesso
-      if (p?.tipo !== 'adm') {
-        setTipoRelatorio('estoque_minimo');
-      }
     }
     
     // 2. Busca listas auxiliares
@@ -83,6 +77,8 @@ export default function TelaRelatorios() {
   // GERADOR DE RELATÓRIOS DINÂMICOS
   // ==========================================
   async function handleGerarRelatorio() {
+    if (!tipoRelatorio) return; // Trava de segurança caso tentem forçar o clique externo
+    
     setErroRelatorio('');
     setGerandoRelatorio(true);
     setDadosRelatorio([]); 
@@ -95,7 +91,7 @@ export default function TelaRelatorios() {
     try {
       if (['mais_vendidos', 'menos_vendidos', 'categoria'].includes(tipoRelatorio)) {
         const { data: itens } = await supabase.from('itens_venda')
-          .select('produto_id, quantidade, subtotal, produtos(descricao, codigo_interno, categoria_id), lancamentos!inner(data_hora)')
+          .select('produto_id, quantity:quantidade, subtotal, produtos(descricao, codigo_interno, categoria_id), lancamentos!inner(data_hora)')
           .gte('lancamentos.data_hora', start)
           .lte('lancamentos.data_hora', end);
 
@@ -116,7 +112,7 @@ export default function TelaRelatorios() {
           if (!mapaVendas[item.produto_id]) {
              mapaVendas[item.produto_id] = { id: item.produto_id, codigo: item.produtos?.codigo_interno, nome: item.produtos?.descricao, qtd: 0, total: 0 };
           }
-          mapaVendas[item.produto_id].qtd += item.quantidade;
+          mapaVendas[item.produto_id].qtd += item.quantity;
           mapaVendas[item.produto_id].total += item.subtotal;
         });
 
@@ -139,7 +135,6 @@ export default function TelaRelatorios() {
           query = query.eq('forma_pagamento', pagamentoSelecionado);
         }
 
-        // Se o usuário for caixa, força a busca apenas nos dados dele
         if (meuPerfil?.tipo !== 'adm') {
           query = query.eq('caixas_sessoes.usuario_id', meuPerfil.id);
         }
@@ -173,7 +168,6 @@ export default function TelaRelatorios() {
           .lte('data_abertura', end)
           .order('data_abertura', { ascending: false });
 
-        // Se o usuário for caixa, força a busca apenas nos dados dele
         if (meuPerfil?.tipo !== 'adm') {
           query = query.eq('usuario_id', meuPerfil.id);
         } else if (usuarioSelecionado !== 'todos') {
@@ -553,7 +547,7 @@ export default function TelaRelatorios() {
     'estoque_zero': 'Produtos Sem Estoque (Zerados)',
     'estoque_minimo': 'Alerta de Estoque Mínimo',
     'validade': 'Controle de Validade do Produto'
-  }[tipoRelatorio];
+  }[tipoRelatorio] || '';
 
   const printStyles = `
     .apenas-impressao { display: none; }
@@ -604,6 +598,8 @@ export default function TelaRelatorios() {
             <div>
               <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#4b5563', display: 'block', marginBottom: '5px' }}>Tipo de Relatório:</label>
               <select value={tipoRelatorio} onChange={(e) => { setTipoRelatorio(e.target.value); setDadosRelatorio([]); }} className="input-padrao" style={{ margin: 0, backgroundColor: 'white' }}>
+                {/* Opção nula adicionada para forçar o usuário a pre-selecionar */}
+                <option value="" disabled>Selecione um relatório...</option>
                 <option value="estoque_minimo">Alerta de Estoque Mínimo</option>
                 <option value="estoque_zero">Produtos Sem Estoque (Zerados)</option>
                 <option value="validade">Controle de Validade do Produto</option>
@@ -676,13 +672,14 @@ export default function TelaRelatorios() {
 
           {erroRelatorio && <p style={{ color: '#ef4444', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center' }}>{erroRelatorio}</p>}
 
-          <button onClick={handleGerarRelatorio} className="btn-entrada" disabled={gerandoRelatorio} style={{ width: '100%', margin: 0, backgroundColor: '#4f46e5' }}>
+          {/* Botão ganha validação !tipoRelatorio para ficar inativo caso esteja em branco */}
+          <button onClick={handleGerarRelatorio} className="btn-entrada" disabled={gerandoRelatorio || !tipoRelatorio} style={{ width: '100%', margin: 0, backgroundColor: (!tipoRelatorio) ? '#d1d5db' : '#4f46e5', color: (!tipoRelatorio) ? '#9ca3af' : 'white', cursor: (!tipoRelatorio) ? 'not-allowed' : 'pointer' }}>
             {gerandoRelatorio ? 'PROCESSANDO...' : 'GERAR RELATÓRIO'}
           </button>
         </div>
 
         {/* Título Visível Acima da Tabela na Web e Botão Impressão Lado a Lado */}
-        {dadosRelatorio.length > 0 && (
+        {dadosRelatorio.length > 0 && tipoRelatorio && (
           <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px' }}>
             <h3 style={{ color: '#374151', fontSize: '1.2rem', margin: 0 }}>
               {tituloDoRelatorio}
@@ -708,7 +705,7 @@ export default function TelaRelatorios() {
             </div>
           </div>
 
-          {dadosRelatorio.length > 0 && (
+          {dadosRelatorio.length > 0 && tipoRelatorio && (
             <div style={{ overflowX: 'auto', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
               <table style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead style={{ backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>

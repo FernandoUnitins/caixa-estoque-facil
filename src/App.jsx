@@ -171,11 +171,11 @@ function App() {
           {mostrarMenuCadastros && (
             <button onClick={() => navegarPara('cadastros')} className={telaAtual === 'cadastros' ? 'ativo' : ''}><IconSettings /> Configurações</button>
           )}
-          {perfil.tipo === 'adm' && (
+          
             <button onClick={() => navegarPara('relatorios')} className={telaAtual === 'relatorios' ? 'ativo' : ''}>
               <FileText size="20" />  Relatórios
             </button>
-          )}
+          
 
           <div className="navbar-user-info">
             <span><IconUser /> {perfil.nome}</span>
@@ -192,11 +192,11 @@ function App() {
             {perfil.tipo === 'adm' && <button onClick={() => navegarPara('resumo')}><House /> Início</button>}
             <button onClick={() => navegarPara('caixa')}><IconCaixa /> Caixa</button>
             {mostrarMenuCadastros && <button onClick={() => navegarPara('cadastros')}><IconSettings /> Configurações</button>}
-            {perfil.tipo === 'adm' && (
+            
               <button onClick={() => navegarPara('relatorios')}>
                 <FileText size="20" /> Relatórios
               </button>
-            )}
+           
             <button onClick={() => { setMenuAberto(false); setModalLogout(true); }} style={{color: '#ef4444', borderTop: '1px dashed #eee', marginTop: '10px'}}>
               <IconLogOut /> Sair
             </button>
