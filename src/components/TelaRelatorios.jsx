@@ -241,6 +241,16 @@ export default function TelaRelatorios() {
           }
         }
       }
+      else if (tipoRelatorio === 'inventario') {
+        // Mapeia todos os produtos para o inventário
+        resultado = produtos.map(p => ({
+          codigo: p.codigo_interno,
+          nome: p.descricao,
+          estoque: p.estoque,
+          preco_custo: p.preco_custo || 0, // Ajuste para o nome exato da coluna no seu DB (ex: custo)
+          preco_venda: p.preco || 0
+        })).sort((a, b) => a.nome.localeCompare(b.nome)); // Ordena alfabeticamente por padrão
+      }
       else if (tipoRelatorio === 'estoque_zero') {
         resultado = produtos.filter(p => p.estoque <= 0).map(p => ({
           codigo: p.codigo_interno, nome: p.descricao, estoque: p.estoque, validade: p.validade
@@ -357,6 +367,16 @@ export default function TelaRelatorios() {
           <th onClick={() => handleSort('valor_total')} style={{ cursor: 'pointer', padding: '12px 15px', textAlign: 'right' }}>Valor Total <SortIcon columnKey="valor_total" /></th>
         </tr>
       );
+    } else if (tipoRelatorio === 'inventario') {
+      return (
+        <tr>
+          <th onClick={() => handleSort('codigo')} style={{ cursor: 'pointer', padding: '12px 15px' }}>Código <SortIcon columnKey="codigo" /></th>
+          <th onClick={() => handleSort('nome')} style={{ cursor: 'pointer', padding: '12px 15px' }}>Produto <SortIcon columnKey="nome" /></th>
+          <th onClick={() => handleSort('estoque')} style={{ cursor: 'pointer', padding: '12px 15px', textAlign: 'center' }}>Estoque <SortIcon columnKey="estoque" /></th>
+          <th onClick={() => handleSort('preco_custo')} style={{ cursor: 'pointer', padding: '12px 15px', textAlign: 'right' }}>R$ Custo <SortIcon columnKey="preco_custo" /></th>
+          <th onClick={() => handleSort('preco_venda')} style={{ cursor: 'pointer', padding: '12px 15px', textAlign: 'right' }}>R$ Venda <SortIcon columnKey="preco_venda" /></th>
+        </tr>
+      );
     } else {
       return (
         <tr>
@@ -431,6 +451,20 @@ export default function TelaRelatorios() {
             </td>
             <td style={{ padding: '12px 15px', fontSize: '0.9rem', color: '#374151', textAlign: 'right' }}>{formatarMoeda(row.preco)}</td>
             <td style={{ padding: '12px 15px', fontSize: '0.9rem', color: '#10b981', fontWeight: 'bold', textAlign: 'right' }}>{formatarMoeda(row.valor_total)}</td>
+          </tr>
+        );
+      } else if (tipoRelatorio === 'inventario') {
+        return (
+          <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
+            <td style={{ padding: '12px 15px', fontSize: '0.85rem', color: '#6b7280' }}>{row.codigo}</td>
+            <td style={{ padding: '12px 15px', fontSize: '0.9rem', color: '#374151', fontWeight: '600' }}>{row.nome}</td>
+            <td style={{ padding: '12px 15px', textAlign: 'center' }}>
+              <span style={{ backgroundColor: row.estoque <= 0 ? '#fef2f2' : '#ecfdf5', color: row.estoque <= 0 ? '#ef4444' : '#000000', padding: '4px 10px', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.8rem' }}>
+                {row.estoque} 
+              </span>
+            </td>
+            <td style={{ padding: '12px 15px', fontSize: '0.9rem', color: '#6b7280', textAlign: 'right' }}>{formatarMoeda(row.preco_custo)}</td>
+            <td style={{ padding: '12px 15px', fontSize: '0.9rem', color: '#000000', fontWeight: 'bold', textAlign: 'right' }}>{formatarMoeda(row.preco_venda)}</td>
           </tr>
         );
       } else {
@@ -522,12 +556,26 @@ export default function TelaRelatorios() {
           </tr>
         </tfoot>
       );
+    } else if (tipoRelatorio === 'inventario') {
+      const totalEstoque = dadosOrdenados.reduce((acc, r) => acc + r.estoque, 0);
+      const totalValorCusto = dadosOrdenados.reduce((acc, r) => acc + (r.preco_custo * r.estoque), 0);
+      const totalValorVenda = dadosOrdenados.reduce((acc, r) => acc + (r.preco_venda * r.estoque), 0);
+      return (
+        <tfoot style={{ backgroundColor: '#f9fafb' }}>
+          <tr>
+            <td colSpan="2" style={{ padding: '12px 15px', fontWeight: 'bold', color: '#374151' }}>TOTAL ({dadosOrdenados.length} itens)</td>
+            <td style={{ padding: '12px 15px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{totalEstoque} </td>
+            <td style={{ padding: '12px 15px', textAlign: 'right', fontWeight: 'bold', color: '#000000' }}>{formatarMoeda(totalValorCusto)}</td>
+            <td style={{ padding: '12px 15px', textAlign: 'right', fontWeight: 'bold', color: '#000000' }}>{formatarMoeda(totalValorVenda)}</td>
+          </tr>
+        </tfoot>
+      );
     } else {
       const totalEstoque = dadosOrdenados.reduce((acc, r) => acc + r.estoque, 0);
       return (
         <tfoot style={{ backgroundColor: '#f9fafb' }}>
           <tr>
-            <td colSpan="2" style={{ padding: '12px 15px', fontWeight: 'bold', color: '#374151' }}>TOTAL ({dadosOrdenados.length} itens listados)</td>
+            <td colSpan="2" style={{ padding: '12px 15px', fontWeight: 'bold', color: '#374151' }}>TOTAL ({dadosOrdenados.length} itens)</td>
             <td style={{ padding: '12px 15px', textAlign: 'center', fontWeight: 'bold', color: '#4f46e5' }}>{totalEstoque} un</td>
             <td style={{ padding: '12px 15px' }}></td>
           </tr>
@@ -543,6 +591,7 @@ export default function TelaRelatorios() {
     'menos_vendidos': 'Produtos Menos Vendidos',
     'categoria': 'Vendas por Categoria',
     'fornecedor': 'Produtos por Fornecedor (Estoque & Valores)',
+    'inventario': 'Inventário Geral de Produtos (Custo e Venda)',
     'pagamento': 'Lançamentos por Forma de Pagamento',
     'estoque_zero': 'Produtos Sem Estoque (Zerados)',
     'estoque_minimo': 'Alerta de Estoque Mínimo',
@@ -579,10 +628,31 @@ export default function TelaRelatorios() {
     }
   `;
 
-  if (loading) {
-    return <main className="tela" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Carregando dados...</main>;
-  }
+if (loading) {
+    return (
+      <main className="tela" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', gap: '20px' }}>
+        <div style={{
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #4f46e5',
+          borderRadius: '50%',
+          width: '40px',
+          height: '40px',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        
+        <span style={{ fontSize: '1.2rem', color: '#4b5563', fontWeight: 'bold' }}>
+          Carregando Relatórios...
+        </span>
 
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </main>
+    );
+  }
   return (
     <main className="tela" style={{ paddingBottom: '30px' }}>
       <style>{printStyles}</style>
@@ -598,7 +668,6 @@ export default function TelaRelatorios() {
             <div>
               <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#4b5563', display: 'block', marginBottom: '5px' }}>Tipo de Relatório:</label>
               <select value={tipoRelatorio} onChange={(e) => { setTipoRelatorio(e.target.value); setDadosRelatorio([]); }} className="input-padrao" style={{ margin: 0, backgroundColor: 'white' }}>
-                {/* Opção nula adicionada para forçar o usuário a pre-selecionar */}
                 <option value="" disabled>Selecione um relatório...</option>
                 <option value="caixas_sessoes">Abertura e Fechamento de Caixa</option>
                 <option value="pagamento">Lançamentos por Forma de Pagamento</option>
@@ -612,6 +681,7 @@ export default function TelaRelatorios() {
                     <option value="menos_vendidos">Produtos Menos Vendidos</option>
                     <option value="fornecedor">Produtos por Fornecedor</option>
                     <option value="categoria">Vendas por Categoria</option>
+                    <option value="inventario">Inventário de Produtos</option>
                   </>
                 )}
               </select>
@@ -671,7 +741,6 @@ export default function TelaRelatorios() {
 
           {erroRelatorio && <p style={{ color: '#ef4444', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '15px', textAlign: 'center' }}>{erroRelatorio}</p>}
 
-          {/* Botão ganha validação !tipoRelatorio para ficar inativo caso esteja em branco */}
           <button onClick={handleGerarRelatorio} className="btn-entrada" disabled={gerandoRelatorio || !tipoRelatorio} style={{ width: '100%', margin: 0, backgroundColor: (!tipoRelatorio) ? '#d1d5db' : '#4f46e5', color: (!tipoRelatorio) ? '#9ca3af' : 'white', cursor: (!tipoRelatorio) ? 'not-allowed' : 'pointer' }}>
             {gerandoRelatorio ? 'PROCESSANDO...' : 'GERAR RELATÓRIO'}
           </button>
@@ -692,7 +761,6 @@ export default function TelaRelatorios() {
         {/* ÁREA QUE SERÁ IMPRESSA */}
         <div id="area-impressao">
           
-          {/* CABEÇALHO DO PDF INVISÍVEL NA WEB, VISÍVEL NO PDF */}
           <div className="apenas-impressao" style={{ marginBottom: '20px', textAlign: 'center', backgroundColor: '#ffffff', padding: '20px 0' }}>
             <h1 style={{ color: '#111827', margin: '0 0 8px 0', fontSize: '24pt', fontWeight: '900', letterSpacing: '-0.5px' }}>MINI MERCADO FEITOSA</h1>
             <h2 style={{ color: '#4b5563', margin: '0 0 10px 0', fontSize: '14pt', textTransform: 'uppercase', letterSpacing: '1px' }}>
