@@ -254,7 +254,7 @@ function App() {
         )}
 
         {telaAtual === 'caixa' && sessaoCaixa && (
-          <TelaEntrada mostrarToast={mostrarToast} sessaoCaixa={sessaoCaixa} onCaixaFechado={() => { setSessaoCaixa(null); navegarPara('resumo'); }} />
+          <TelaEntrada mostrarToast={mostrarToast} sessaoCaixa={sessaoCaixa} onCaixaFechado={() => { setSessaoCaixa(null); if (perfil.tipo === 'adm') navegarPara('resumo'); }} />
         )}
         
         {telaAtual === 'cadastros' && (
