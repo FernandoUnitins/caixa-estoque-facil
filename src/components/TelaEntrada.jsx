@@ -829,6 +829,28 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
 
   const adicionarAoCarrinho = (produto) => {
     if (produto.estoque <= 0) return mostrarToast(`Sem estoque: ${produto.descricao}`, 'erro');
+
+    // --- INÍCIO DO INCREMENTO: VALIDAÇÃO DE VALIDADE ---
+    if (produto.validade) {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0); // Zera as horas para comparar apenas o dia
+
+      // Adiciona T12:00:00 para evitar problemas de fuso horário que adiantam o dia
+      const dataValidade = new Date(`${produto.validade}T12:00:00`); 
+      dataValidade.setHours(0, 0, 0, 0);
+
+      // Calcula a diferença em dias
+      const diffTime = dataValidade - hoje;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        return mostrarToast(`ATENÇÃO: Produto VENCIDO! (${produto.descricao})`, 'erro');
+      } else if (diffDays <= 7) {
+        mostrarToast(`AVISO: ${produto.descricao} vence em ${diffDays} dia(s)!`, 'erro'); // Alerta, mas não bloqueia a venda
+      }
+    }
+    // --- FIM DO INCREMENTO ---
+    
     const copia = [...carrinho];
     const index = copia.findIndex(i => i.id === produto.id);
     if (index >= 0) {
