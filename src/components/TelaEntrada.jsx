@@ -827,26 +827,27 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
     setResultadosBusca(encontrados);
   };
 
-  const adicionarAoCarrinho = (produto) => {
+ const adicionarAoCarrinho = (produto) => {
     if (produto.estoque <= 0) return mostrarToast(`Sem estoque: ${produto.descricao}`, 'erro');
+
+    let exibiuAviso = false; // <-- Criamos uma variável de controle aqui
 
     // --- INÍCIO DO INCREMENTO: VALIDAÇÃO DE VALIDADE ---
     if (produto.validade) {
       const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0); // Zera as horas para comparar apenas o dia
+      hoje.setHours(0, 0, 0, 0); 
 
-      // Adiciona T12:00:00 para evitar problemas de fuso horário que adiantam o dia
       const dataValidade = new Date(`${produto.validade}T12:00:00`); 
       dataValidade.setHours(0, 0, 0, 0);
 
-      // Calcula a diferença em dias
       const diffTime = dataValidade - hoje;
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
       if (diffDays < 0) {
         return mostrarToast(`ATENÇÃO: Produto VENCIDO! (${produto.descricao})`, 'erro');
       } else if (diffDays <= 7) {
-        mostrarToast(`AVISO: ${produto.descricao} vence em ${diffDays} dia(s)!`, 'erro'); // Alerta, mas não bloqueia a venda
+        mostrarToast(`AVISO: ${produto.descricao} vence em ${diffDays} dia(s)!`, 'erro'); 
+        exibiuAviso = true; // <-- Avisamos que o alerta já está na tela
       }
     } 
     // --- FIM DO INCREMENTO ---
@@ -860,7 +861,12 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
       copia.push({ ...produto, quantidadeVenda: 1, desconto: 0 });
     }
     setCarrinho(copia);
-    mostrarToast('Adicionado!', 'sucesso');
+    
+    // Só mostra "Adicionado!" se NÃO tiver exibido o alerta de validade
+    if (!exibiuAviso) {
+      mostrarToast('Adicionado!', 'sucesso');
+    }
+    
     setTermoBusca('');
     setResultadosBusca([]);
   };
