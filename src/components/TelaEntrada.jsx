@@ -848,9 +848,9 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
       } else if (diffDays <= 7) {
         mostrarToast(`AVISO: ${produto.descricao} vence em ${diffDays} dia(s)!`, 'erro'); // Alerta, mas não bloqueia a venda
       }
-    }
+    } 
     // --- FIM DO INCREMENTO ---
-    
+
     const copia = [...carrinho];
     const index = copia.findIndex(i => i.id === produto.id);
     if (index >= 0) {
