@@ -58,6 +58,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
   const [carrinho, setCarrinho] = useState([]);
   const [produtosTotais, setProdutosTotais] = useState([]);
   const [formasPagamento, setFormasPagamento] = useState([]);
+  const [toastEstoqueModal, setToastEstoqueModal] = useState('');
   
   const [termoBusca, setTermoBusca] = useState('');
   const [resultadosBusca, setResultadosBusca] = useState([]);
@@ -109,6 +110,13 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
   const [tecladoCaps, setTecladoCaps] = useState(true);
   const [mostrarCalculadora, setMostrarCalculadora] = useState(false);
   const [calcExpression, setCalcExpression] = useState('');
+
+  useEffect(() => {
+    if (!toastEstoqueModal) return undefined;
+
+    const timeout = setTimeout(() => setToastEstoqueModal(''), 3000);
+    return () => clearTimeout(timeout);
+  }, [toastEstoqueModal]);
 
   useEffect(() => {
     const checkDevice = () => {
@@ -912,6 +920,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
 
   const abrirEdicao = (index) => {
     const item = carrinho[index];
+    setToastEstoqueModal('');
     setModalEditar({
       index,
       descricao: item.descricao,
@@ -924,9 +933,11 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
 
   const incrementarQuantidadeEdicao = () => {
     if (modalEditar.quantidadeVenda >= modalEditar.estoqueMax) {
-      return mostrarToast('Limite de estoque atingido.', 'erro');
+      setToastEstoqueModal('Limite de estoque atingido.');
+      return;
     }
 
+    setToastEstoqueModal('');
     setModalEditar({ ...modalEditar, quantidadeVenda: modalEditar.quantidadeVenda + 1 });
   };
 
@@ -1785,6 +1796,11 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
               <input type="number" readOnly value={modalEditar.quantidadeVenda} style={{ width: '80px', height: '50px', border: '1px solid #d1d5db', textAlign: 'center', fontWeight: 'bold', fontSize: '1.2rem', outline: 'none' }} inputMode="numeric" />
               <button onClick={incrementarQuantidadeEdicao} style={{ width: '60px', height: '50px', borderRadius: '0 12px 12px 0', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderLeft: 'none', color: '#374151', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><IconPlus color="#374151" /></button>
             </div>
+            {toastEstoqueModal && (
+              <div role="alert" style={{ backgroundColor: '#ef4444', color: 'white', padding: '12px 16px', borderRadius: '12px', fontWeight: 'bold', textAlign: 'center', marginBottom: '15px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
+                {toastEstoqueModal}
+              </div>
+            )}
             <LabelCampo>Desconto (R$)</LabelCampo>
             <div style={{
               display: 'flex',
