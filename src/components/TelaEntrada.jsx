@@ -1754,7 +1754,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
       {modalEditar !== null && (
         <Overlay absolute={isTabletLandscape}>
           <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '16px', width: '90%', maxWidth: '350px' }}>
-            <h3 style={{ color: '#374151', marginBottom: '15px', textAlign: 'center' }}>Ajustar Item</h3>
+            <h3 style={{ color: '#374151', marginBottom: '15px', textAlign: 'center' }}>Ajustar Item:</h3>
             <div style={{ backgroundColor: '#eef2ff', padding: '15px', borderRadius: '12px', marginBottom: '20px', textAlign: 'center' }}>
               <strong style={{ color: '#4f46e5', fontSize: '1.2rem', display: 'block', marginBottom: '10px', lineHeight: '1.2' }}>{modalEditar.descricao}</strong>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
