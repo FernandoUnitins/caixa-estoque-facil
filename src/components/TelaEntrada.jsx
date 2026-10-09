@@ -922,6 +922,14 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
     });
   };
 
+  const incrementarQuantidadeEdicao = () => {
+    if (modalEditar.quantidadeVenda >= modalEditar.estoqueMax) {
+      return mostrarToast('Limite de estoque atingido.', 'erro');
+    }
+
+    setModalEditar({ ...modalEditar, quantidadeVenda: modalEditar.quantidadeVenda + 1 });
+  };
+
   const aplicarDescontoRapido = (percentual) => {
     const totalItemAntesDesc = modalEditar.preco * modalEditar.quantidadeVenda;
     const descValor = totalItemAntesDesc * (percentual / 100);
@@ -1775,7 +1783,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
             <div style={{ display: 'flex', alignItems: 'stretch', marginBottom: '20px', justifyContent: 'center' }}>
               <button onClick={() => setModalEditar({...modalEditar, quantidadeVenda: Math.max(1, modalEditar.quantidadeVenda - 1)})} style={{ width: '60px', height: '50px', borderRadius: '12px 0 0 12px', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRight: 'none', color: '#374151', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><IconMinus color="#374151" /></button>
               <input type="number" readOnly value={modalEditar.quantidadeVenda} style={{ width: '80px', height: '50px', border: '1px solid #d1d5db', textAlign: 'center', fontWeight: 'bold', fontSize: '1.2rem', outline: 'none' }} inputMode="numeric" />
-              <button onClick={() => setModalEditar({...modalEditar, quantidadeVenda: Math.min(modalEditar.estoqueMax, modalEditar.quantidadeVenda + 1)})} style={{ width: '60px', height: '50px', borderRadius: '0 12px 12px 0', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderLeft: 'none', color: '#374151', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><IconPlus color="#374151" /></button>
+              <button onClick={incrementarQuantidadeEdicao} style={{ width: '60px', height: '50px', borderRadius: '0 12px 12px 0', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderLeft: 'none', color: '#374151', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><IconPlus color="#374151" /></button>
             </div>
             <LabelCampo>Desconto (R$)</LabelCampo>
             <div style={{
