@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from './supabaseClient';
+import React, { useState, useEffect, useRef } from 'react';
+import { criarClienteAutenticacaoIsolada, supabase } from './supabaseClient';
 import './App.css';
 
 // Import das Telas
@@ -29,6 +29,8 @@ const IconSettings = ({ color = "currentColor" }) => <svg width="22" height="22"
 const IconMaximize = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>;
 const IconMinimize = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path></svg>;
 
+const TEMPO_INATIVIDADE_MS = 5000;
+
 function App() {
   const [session, setSession] = useState(null);
   const [perfil, setPerfil] = useState(null);
@@ -44,6 +46,12 @@ function App() {
   const [loadingCaixa, setLoadingCaixa] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
   const [modalLogout, setModalLogout] = useState(false);
+  const [telaBloqueada, setTelaBloqueada] = useState(false);
+  const [senhaDesbloqueio, setSenhaDesbloqueio] = useState('');
+  const [erroDesbloqueio, setErroDesbloqueio] = useState('');
+  const [desbloqueandoTela, setDesbloqueandoTela] = useState(false);
+  const [saindoDoSistema, setSaindoDoSistema] = useState(false);
+  const campoSenhaDesbloqueioRef = useRef(null);
 
   const mostrarToast = (mensagem, tipo = 'sucesso') => {
     setToast({ visivel: true, mensagem, tipo });
@@ -78,6 +86,9 @@ function App() {
         setSessaoCaixa(null); 
         setTelaAtual(''); 
         setSubTela(null); 
+        setTelaBloqueada(false);
+        setSenhaDesbloqueio('');
+        setErroDesbloqueio('');
       }
     });
 
@@ -92,6 +103,42 @@ function App() {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (!session || recuperandoSenha || telaBloqueada) return undefined;
+
+    let tempoInativo;
+    const resetarTempo = () => {
+      clearTimeout(tempoInativo);
+      tempoInativo = setTimeout(() => setTelaBloqueada(true), TEMPO_INATIVIDADE_MS);
+    };
+    const eventosDeAtividade = ['mousemove', 'keydown', 'click', 'wheel', 'touchstart', 'pointerdown'];
+
+    eventosDeAtividade.forEach(evento => window.addEventListener(evento, resetarTempo));
+    resetarTempo();
+
+    return () => {
+      clearTimeout(tempoInativo);
+      eventosDeAtividade.forEach(evento => window.removeEventListener(evento, resetarTempo));
+    };
+  }, [session, recuperandoSenha, telaBloqueada]);
+
+  useEffect(() => {
+    if (!telaBloqueada) return undefined;
+
+    campoSenhaDesbloqueioRef.current?.focus();
+    const manterFocoNoBloqueio = (e) => {
+      const formulario = campoSenhaDesbloqueioRef.current?.form;
+      if (formulario?.contains(e.target) && e.key !== 'Tab') return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      campoSenhaDesbloqueioRef.current?.focus();
+    };
+
+    window.addEventListener('keydown', manterFocoNoBloqueio, true);
+    return () => window.removeEventListener('keydown', manterFocoNoBloqueio, true);
+  }, [telaBloqueada]);
 
   const carregarDadosIniciais = async (userId) => {
     const { data: user } = await supabase.from('usuarios').select('*').eq('id', userId).single();
@@ -139,6 +186,111 @@ function App() {
     await supabase.auth.signOut();
   };
 
+  const desbloquearTela = async (e) => {
+    e.preventDefault();
+    if (desbloqueandoTela || saindoDoSistema) return;
+
+    setDesbloqueandoTela(true);
+    setErroDesbloqueio('');
+
+    try {
+      const { data: { session: sessaoAtual }, error: erroSessao } = await supabase.auth.getSession();
+      if (erroSessao) {
+        setErroDesbloqueio(`Não foi possível verificar a sessão: ${erroSessao.message}`);
+        return;
+      }
+
+      if (!sessaoAtual?.user?.email) {
+        setErroDesbloqueio('Não foi possível identificar a sessão atual. Entre novamente no sistema.');
+        return;
+      }
+
+      const clienteAutenticacao = criarClienteAutenticacaoIsolada();
+      const { data: autenticacao, error: erroLogin } = await clienteAutenticacao.auth.signInWithPassword({
+        email: sessaoAtual.user.email,
+        password: senhaDesbloqueio
+      });
+
+      if (erroLogin || !autenticacao.user || autenticacao.user.id !== sessaoAtual.user.id) {
+        setErroDesbloqueio('Senha incorreta. Confira sua senha e tente novamente.');
+        return;
+      }
+
+      setTelaBloqueada(false);
+      setSenhaDesbloqueio('');
+      setErroDesbloqueio('');
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : 'Erro desconhecido.';
+      setErroDesbloqueio(`Falha ao validar a senha: ${detalhe}`);
+    } finally {
+      setDesbloqueandoTela(false);
+    }
+  };
+
+  const sairDaTelaBloqueada = async () => {
+    if (desbloqueandoTela || saindoDoSistema) return;
+
+    setSaindoDoSistema(true);
+    setErroDesbloqueio('');
+
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        setErroDesbloqueio(`Não foi possível sair do sistema: ${error.message}`);
+      }
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : 'Erro desconhecido.';
+      setErroDesbloqueio(`Falha ao sair do sistema: ${detalhe}`);
+    } finally {
+      setSaindoDoSistema(false);
+    }
+  };
+
+  const bloqueioInatividade = telaBloqueada && (
+    <div className="inactivity-lock-overlay">
+      <form
+        className="inactivity-lock-card"
+        onSubmit={desbloquearTela}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-bloqueio-inatividade"
+      >
+        <div className="inactivity-lock-icon" aria-hidden="true">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        </div>
+        <h1 id="titulo-bloqueio-inatividade">Sessão bloqueada por inatividade</h1>
+        <p>Por segurança, confirme sua senha para continuar.</p>
+        <label htmlFor="senha-desbloqueio" className="inactivity-lock-label">Sua senha</label>
+        <input
+          id="senha-desbloqueio"
+          ref={campoSenhaDesbloqueioRef}
+          className="input-padrao"
+          type="password"
+          value={senhaDesbloqueio}
+          onChange={e => setSenhaDesbloqueio(e.target.value)}
+          autoComplete="current-password"
+          required
+          disabled={desbloqueandoTela || saindoDoSistema}
+        />
+        {erroDesbloqueio && <p className="inactivity-lock-error" role="alert">{erroDesbloqueio}</p>}
+        <button className="btn-entrada inactivity-unlock-btn" type="submit" disabled={desbloqueandoTela || saindoDoSistema}>
+          {desbloqueandoTela ? 'VALIDANDO...' : 'DESBLOQUEAR TELA'}
+        </button>
+        <button
+          className="btn-secundario inactivity-logout-btn"
+          type="button"
+          onClick={sairDaTelaBloqueada}
+          disabled={desbloqueandoTela || saindoDoSistema}
+        >
+          {saindoDoSistema ? 'SAINDO...' : 'SAIR DO SISTEMA'}
+        </button>
+      </form>
+    </div>
+  );
+
   if (!session || recuperandoSenha) {
     return (
       <div className="app-container auth-container">
@@ -148,13 +300,14 @@ function App() {
     );
   }
   
-  if (!perfil) return <div className="app-container" style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>Carregando...</div>;
+  if (!perfil) return <div className="app-container" style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>Carregando...{bloqueioInatividade}</div>;
 
   const mostrarMenuCadastros = true; 
 
   return (
     <div className="app-container">
       {toast.visivel && <div className={`toast-container toast-${toast.tipo}`}>{toast.mensagem}</div>}
+      {bloqueioInatividade}
       
       {modalLogout && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

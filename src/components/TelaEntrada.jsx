@@ -53,18 +53,9 @@ const IconCaixa = () => <svg xmlns="http://www.w3.org/2000/svg" width="25" heigh
 // ==========================================
 const LabelCampo = ({ children }) => <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#4b5563', paddingLeft: '4px' }}>{children}</label>;
 const Overlay = ({ children, absolute }) => <div style={{ position: absolute ? 'absolute' : 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: absolute ? '16px' : '0' }}>{children}</div>;
-const TEMPO_INATIVIDADE_MS = 5000;
-//const TEMPO_INATIVIDADE_MS = 30 * 60 * 1000; 30 minutos
 
 
 export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado }) {
-  const [telaBloqueada, setTelaBloqueada] = useState(false);
-  const [senhaDesbloqueio, setSenhaDesbloqueio] = useState('');
-  const [erroDesbloqueio, setErroDesbloqueio] = useState('');
-  const [desbloqueandoTela, setDesbloqueandoTela] = useState(false);
-  const [saindoDoSistema, setSaindoDoSistema] = useState(false);
-  const campoSenhaDesbloqueioRef = useRef(null);
-
   const [carrinho, setCarrinho] = useState([]);
   const [produtosTotais, setProdutosTotais] = useState([]);
   const [formasPagamento, setFormasPagamento] = useState([]);
@@ -126,98 +117,6 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
   const [tecladoCaps, setTecladoCaps] = useState(true);
   const [mostrarCalculadora, setMostrarCalculadora] = useState(false);
   const [calcExpression, setCalcExpression] = useState('');
-
-  useEffect(() => {
-    if (telaBloqueada) {
-      campoSenhaDesbloqueioRef.current?.focus();
-      const manterFocoNoBloqueio = (e) => {
-        const formulario = campoSenhaDesbloqueioRef.current?.form;
-        if (formulario?.contains(e.target) && e.key !== 'Tab') return;
-
-        e.preventDefault();
-        e.stopPropagation();
-        campoSenhaDesbloqueioRef.current?.focus();
-      };
-
-      window.addEventListener('keydown', manterFocoNoBloqueio, true);
-      return () => window.removeEventListener('keydown', manterFocoNoBloqueio, true);
-    }
-
-    let tempoInativo;
-    const resetarTempo = () => {
-      clearTimeout(tempoInativo);
-      tempoInativo = setTimeout(() => setTelaBloqueada(true), TEMPO_INATIVIDADE_MS);
-    };
-    const eventosDeAtividade = ['mousemove', 'keydown', 'click', 'wheel', 'touchstart', 'pointerdown'];
-
-    eventosDeAtividade.forEach(evento => window.addEventListener(evento, resetarTempo));
-    resetarTempo();
-
-    return () => {
-      clearTimeout(tempoInativo);
-      eventosDeAtividade.forEach(evento => window.removeEventListener(evento, resetarTempo));
-    };
-  }, [telaBloqueada]);
-
-  const desbloquearTela = async (e) => {
-    e.preventDefault();
-    if (desbloqueandoTela) return;
-
-    setDesbloqueandoTela(true);
-    setErroDesbloqueio('');
-
-    try {
-      const { data: { session }, error: erroSessao } = await supabase.auth.getSession();
-      if (erroSessao) {
-        setErroDesbloqueio(`Não foi possível verificar a sessão: ${erroSessao.message}`);
-        return;
-      }
-
-      if (!session?.user?.email) {
-        setErroDesbloqueio('Não foi possível identificar a sessão atual. Entre novamente no sistema.');
-        return;
-      }
-
-      const clienteAutenticacao = criarClienteAutenticacaoIsolada();
-      const { data: autenticacao, error: erroLogin } = await clienteAutenticacao.auth.signInWithPassword({
-        email: session.user.email,
-        password: senhaDesbloqueio
-      });
-
-      if (erroLogin || !autenticacao.user || autenticacao.user.id !== session.user.id) {
-        setErroDesbloqueio('Senha incorreta. Confira sua senha e tente novamente.');
-        return;
-      }
-
-      setTelaBloqueada(false);
-      setSenhaDesbloqueio('');
-      setErroDesbloqueio('');
-    } catch (error) {
-      const detalhe = error instanceof Error ? error.message : 'Erro desconhecido.';
-      setErroDesbloqueio(`Falha ao validar a senha: ${detalhe}`);
-    } finally {
-      setDesbloqueandoTela(false);
-    }
-  };
-
-  const sairDoSistema = async () => {
-    if (saindoDoSistema) return;
-
-    setSaindoDoSistema(true);
-    setErroDesbloqueio('');
-
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        setErroDesbloqueio(`Não foi possível sair do sistema: ${error.message}`);
-      }
-    } catch (error) {
-      const detalhe = error instanceof Error ? error.message : 'Erro desconhecido.';
-      setErroDesbloqueio(`Falha ao sair do sistema: ${detalhe}`);
-    } finally {
-      setSaindoDoSistema(false);
-    }
-  };
 
   useEffect(() => {
     if (!toastEstoqueModal) return undefined;
@@ -2279,50 +2178,6 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
         </div>
       )}
 
-      {telaBloqueada && (
-        <div className="inactivity-lock-overlay">
-          <form
-            className="inactivity-lock-card"
-            onSubmit={desbloquearTela}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="titulo-bloqueio-inatividade"
-          >
-            <div className="inactivity-lock-icon" aria-hidden="true">
-              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            </div>
-            <h1 id="titulo-bloqueio-inatividade">Sessão bloqueada por inatividade</h1>
-            <p>Por segurança, confirme sua senha para continuar.</p>
-            <label htmlFor="senha-desbloqueio" className="inactivity-lock-label">Sua senha</label>
-            <input
-              id="senha-desbloqueio"
-              ref={campoSenhaDesbloqueioRef}
-              className="input-padrao"
-              type="password"
-              value={senhaDesbloqueio}
-              onChange={e => setSenhaDesbloqueio(e.target.value)}
-              autoComplete="current-password"
-              required
-              disabled={desbloqueandoTela}
-            />
-            {erroDesbloqueio && <p className="inactivity-lock-error" role="alert">{erroDesbloqueio}</p>}
-            <button className="btn-entrada inactivity-unlock-btn" type="submit" disabled={desbloqueandoTela || saindoDoSistema}>
-              {desbloqueandoTela ? 'VALIDANDO...' : 'DESBLOQUEAR TELA'}
-            </button>
-            <button
-              className="btn-secundario inactivity-logout-btn"
-              type="button"
-              onClick={sairDoSistema}
-              disabled={desbloqueandoTela || saindoDoSistema}
-            >
-              {saindoDoSistema ? 'SAINDO...' : 'SAIR DO SISTEMA'}
-            </button>
-          </form>
-        </div>
-      )}
     </div>
   );
 }
