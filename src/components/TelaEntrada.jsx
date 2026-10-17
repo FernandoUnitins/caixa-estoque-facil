@@ -62,6 +62,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
   const [senhaDesbloqueio, setSenhaDesbloqueio] = useState('');
   const [erroDesbloqueio, setErroDesbloqueio] = useState('');
   const [desbloqueandoTela, setDesbloqueandoTela] = useState(false);
+  const [saindoDoSistema, setSaindoDoSistema] = useState(false);
   const campoSenhaDesbloqueioRef = useRef(null);
 
   const [carrinho, setCarrinho] = useState([]);
@@ -196,6 +197,25 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
       setErroDesbloqueio(`Falha ao validar a senha: ${detalhe}`);
     } finally {
       setDesbloqueandoTela(false);
+    }
+  };
+
+  const sairDoSistema = async () => {
+    if (saindoDoSistema) return;
+
+    setSaindoDoSistema(true);
+    setErroDesbloqueio('');
+
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        setErroDesbloqueio(`Não foi possível sair do sistema: ${error.message}`);
+      }
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : 'Erro desconhecido.';
+      setErroDesbloqueio(`Falha ao sair do sistema: ${detalhe}`);
+    } finally {
+      setSaindoDoSistema(false);
     }
   };
 
@@ -2289,8 +2309,16 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
               disabled={desbloqueandoTela}
             />
             {erroDesbloqueio && <p className="inactivity-lock-error" role="alert">{erroDesbloqueio}</p>}
-            <button className="btn-entrada inactivity-unlock-btn" type="submit" disabled={desbloqueandoTela}>
-              {desbloqueandoTela ? 'VALIDANDO...' : 'DESBLOQUEAR SISTEMA'}
+            <button className="btn-entrada inactivity-unlock-btn" type="submit" disabled={desbloqueandoTela || saindoDoSistema}>
+              {desbloqueandoTela ? 'VALIDANDO...' : 'DESBLOQUEAR TELA'}
+            </button>
+            <button
+              className="btn-secundario inactivity-logout-btn"
+              type="button"
+              onClick={sairDoSistema}
+              disabled={desbloqueandoTela || saindoDoSistema}
+            >
+              {saindoDoSistema ? 'SAINDO...' : 'SAIR DO SISTEMA'}
             </button>
           </form>
         </div>
