@@ -186,6 +186,127 @@ html, body, #root {
   border-color: #4f46e5;
 }
 
+.modal-validade-proxima {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: min(92vw, 460px);
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+  padding: 16px;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-validade-icone {
+  display: flex;
+  justify-content: center;
+}
+
+.modal-validade-titulo {
+  margin: 0;
+  color: #92400e;
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.modal-validade-descricao {
+  margin: 0;
+  color: #4b5563;
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.modal-validade-desconto {
+  padding: 9px;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.modal-validade-label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: #4b5563;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.modal-validade-proxima .input-padrao {
+  box-sizing: border-box;
+  min-width: 0;
+  margin-top: 4px;
+  padding: 7px 9px;
+  border-radius: 8px;
+}
+
+.modal-validade-percentuais {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.modal-validade-percentual {
+  height: auto !important;
+  padding: 5px 8px !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.modal-validade-percentual.selecionado {
+  background: #4f46e5;
+  color: white;
+}
+
+.modal-validade-preco {
+  margin: 6px 0 0;
+  color: #6b7280;
+  text-align: right;
+  font-size: 0.8rem;
+}
+
+.modal-validade-credenciais {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.modal-validade-erro {
+  margin: 0;
+  padding: 7px 9px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.modal-validade-acoes {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-validade-acoes button {
+  min-width: 0;
+  height: 38px !important;
+  padding: 7px 8px !important;
+  border-radius: 9px !important;
+  font-size: 0.8rem;
+}
+
 /* TOAST FIXO */
 .toast-container {
   position: fixed;
@@ -378,5 +499,47 @@ button:disabled {
 @media (max-width: 400px) {
   .grid-botoes-caixa {
     grid-template-columns: 1fr; /* Em telas de celular muito estreitas, empilha os botões */
+  }
+
+  .modal-validade-proxima {
+    gap: 5px;
+    padding: 12px;
+  }
+
+  .modal-validade-descricao {
+    font-size: 0.82rem;
+  }
+
+  .modal-validade-percentual {
+    padding: 4px 6px !important;
+  }
+}
+
+@media (max-height: 560px) {
+  .modal-validade-proxima {
+    gap: 4px;
+    padding: 9px;
+  }
+
+  .modal-validade-icone svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .modal-validade-descricao {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+
+  .modal-validade-desconto {
+    padding: 6px;
+  }
+
+  .modal-validade-preco {
+    margin-top: 3px;
+  }
+
+  .modal-validade-acoes button {
+    height: 34px !important;
   }
 }

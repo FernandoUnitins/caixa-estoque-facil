@@ -60,7 +60,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
   const [formasPagamento, setFormasPagamento] = useState([]);
   const [toastEstoqueModal, setToastEstoqueModal] = useState('');
   const [produtoPendente, setProdutoPendente] = useState(null);
-  const [emailGerente, setEmailGerente] = useState('');
+  const [usuarioGerente, setUsuarioGerente] = useState('');
   const [senhaGerente, setSenhaGerente] = useState('');
   const [descontoPromocional, setDescontoPromocional] = useState('0');
   const [erroAutorizacao, setErroAutorizacao] = useState('');
@@ -907,7 +907,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
         return mostrarToast(`ATENÇÃO: Produto VENCIDO! (${produto.descricao})`, 'erro');
       } else if (diffDays <= 7) {
         setProdutoPendente({ produto, diasParaVencer: diffDays });
-        setEmailGerente('');
+        setUsuarioGerente('');
         setSenhaGerente('');
         setDescontoPromocional('0');
         setErroAutorizacao('');
@@ -920,7 +920,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
 
   const cancelarAutorizacaoValidade = () => {
     setProdutoPendente(null);
-    setEmailGerente('');
+    setUsuarioGerente('');
     setSenhaGerente('');
     setDescontoPromocional('0');
     setErroAutorizacao('');
@@ -941,8 +941,25 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
 
     try {
       const clienteAutenticacao = criarClienteAutenticacaoIsolada();
+      const usuarioNormalizado = usuarioGerente.replace('@', '').trim().toLowerCase();
+      const { data: gerente, error: erroPerfil } = await clienteAutenticacao
+        .from('usuarios')
+        .select('id, email, tipo, ativo')
+        .eq('username', usuarioNormalizado)
+        .maybeSingle();
+
+      if (erroPerfil) {
+        setErroAutorizacao(`Erro ao localizar a conta gerencial: ${erroPerfil.message}`);
+        return;
+      }
+
+      if (!gerente || gerente.tipo !== 'adm' || gerente.ativo !== true) {
+        setErroAutorizacao('Não foi possível autorizar: confira as credenciais do gerente.');
+        return;
+      }
+
       const { data: autenticacao, error: erroLogin } = await clienteAutenticacao.auth.signInWithPassword({
-        email: emailGerente.trim(),
+        email: gerente.email,
         password: senhaGerente
       });
 
@@ -951,18 +968,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
         return;
       }
 
-      const { data: gerente, error: erroPerfil } = await clienteAutenticacao
-        .from('usuarios')
-        .select('tipo, ativo')
-        .eq('id', autenticacao.user.id)
-        .maybeSingle();
-
-      if (erroPerfil) {
-        setErroAutorizacao(`Erro ao validar o perfil gerencial: ${erroPerfil.message}`);
-        return;
-      }
-
-      if (!gerente || gerente.tipo !== 'adm' || gerente.ativo !== true) {
+      if (autenticacao.user.id !== gerente.id) {
         setErroAutorizacao('A autorização exige uma conta gerencial ativa.');
         return;
       }
@@ -1882,13 +1888,13 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
             role="dialog"
             aria-modal="true"
             aria-labelledby="titulo-validade-proxima"
-            style={{ backgroundColor: 'white', padding: '26px', borderRadius: '20px', width: 'min(92vw, 460px)', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.25)' }}
+            className="modal-validade-proxima"
           >
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-              <IconAlertTriangle color="#d97706" size="38" />
+            <div className="modal-validade-icone">
+              <IconAlertTriangle color="#d97706" size="30" />
             </div>
-            <h3 id="titulo-validade-proxima" style={{ color: '#92400e', textAlign: 'center', margin: '0 0 8px' }}>Produto próximo ao vencimento</h3>
-            <p style={{ color: '#4b5563', textAlign: 'center', marginBottom: '18px' }}>
+            <h3 id="titulo-validade-proxima" className="modal-validade-titulo">Produto próximo ao vencimento</h3>
+            <p className="modal-validade-descricao">
               <strong>{produtoPendente.produto.descricao}</strong>
               <br />
               Validade em {produtoPendente.diasParaVencer === 0 ? 'hoje' : `${produtoPendente.diasParaVencer} dia(s)`}.
@@ -1896,9 +1902,10 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
               Confirme a autorização gerencial antes de inserir o item no carrinho.
             </p>
 
-            <div style={{ backgroundColor: '#f9fafb', padding: '14px', borderRadius: '12px', marginBottom: '16px' }}>
-              <LabelCampo>Desconto promocional (%)</LabelCampo>
+            <div className="modal-validade-desconto">
+              <label className="modal-validade-label" htmlFor="desconto-promocional-validade">Desconto promocional (%)</label>
               <input
+                id="desconto-promocional-validade"
                 type="number"
                 min="0"
                 max="99"
@@ -1907,42 +1914,42 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
                 onChange={e => setDescontoPromocional(e.target.value)}
                 onFocus={() => setCampoFocado('descontoValidade')}
                 className="input-padrao"
-                style={{ marginTop: '6px' }}
                 inputMode={isTabletLandscape ? 'none' : 'numeric'}
                 aria-label="Desconto promocional em porcentagem"
               />
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+              <div className="modal-validade-percentuais">
                 {[0, 5, 10, 15, 20, 25, 30, 40, 50].map(percentual => (
                   <button
                     key={percentual}
                     type="button"
                     onClick={() => setDescontoPromocional(String(percentual))}
                     aria-pressed={Number(descontoPromocional) === percentual}
-                    style={{ padding: '7px 10px', backgroundColor: Number(descontoPromocional) === percentual ? '#4f46e5' : '#eef2ff', color: Number(descontoPromocional) === percentual ? 'white' : '#4f46e5', border: 'none', borderRadius: '8px', fontSize: '0.8rem' }}
+                    className={`modal-validade-percentual${Number(descontoPromocional) === percentual ? ' selecionado' : ''}`}
                   >
                     {percentual}%
                   </button>
                 ))}
               </div>
-              <p style={{ color: '#6b7280', textAlign: 'right', fontSize: '0.85rem', marginTop: '10px' }}>
+              <p className="modal-validade-preco">
                 Preço promocional: <strong>{formatarMoeda(produtoPendente.produto.preco * (1 - (Number(descontoPromocional) || 0) / 100))}</strong>
               </p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#4b5563' }}>
-                E-mail do gerente
+            <div className="modal-validade-credenciais">
+              <label className="modal-validade-label">
+                Usuário do gerente
                 <input
-                  type="email"
-                  value={emailGerente}
-                  onChange={e => setEmailGerente(e.target.value)}
+                  type="text"
+                  value={usuarioGerente}
+                  onChange={e => setUsuarioGerente(e.target.value)}
                   className="input-padrao"
                   autoComplete="off"
                   required
-                  style={{ marginTop: '5px' }}
+                  autoCapitalize="none"
+                  spellCheck="false"
                 />
               </label>
-              <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#4b5563' }}>
+              <label className="modal-validade-label">
                 Senha do gerente
                 <input
                   type="password"
@@ -1951,18 +1958,17 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
                   className="input-padrao"
                   autoComplete="new-password"
                   required
-                  style={{ marginTop: '5px' }}
                 />
               </label>
             </div>
 
             {erroAutorizacao && (
-              <p role="alert" style={{ backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', padding: '10px 12px', borderRadius: '9px', fontSize: '0.85rem', marginBottom: '14px' }}>
+              <p role="alert" className="modal-validade-erro">
                 {erroAutorizacao}
               </p>
             )}
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="modal-validade-acoes">
               <button type="button" onClick={cancelarAutorizacaoValidade} className="btn-secundario" style={{ flex: 1, margin: 0 }} disabled={autorizandoGerente}>
                 CANCELAR
               </button>
