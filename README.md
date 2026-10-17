@@ -24,3 +24,7 @@ O escopo inicial foca no tripé essencial para o funcionamento do negócio:
 ```bash
 git clone https://github.com/FernandoUnitins/caixa-estoque-facil.git
 ```
+
+## Frente de Caixa: produtos próximos ao vencimento
+
+Ao bipar ou selecionar um produto que vence em até 7 dias, o PDV interrompe a inclusão no carrinho e solicita autorização de uma conta gerencial ativa (`tipo: adm`). O gerente informa seu e-mail e senha e pode definir um desconto promocional de 0% a 99% no próprio alerta. A autenticação é feita em uma sessão isolada, sem substituir o acesso do operador. Produtos vencidos continuam bloqueados.

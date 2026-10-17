@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../supabaseClient';
+import { criarClienteAutenticacaoIsolada, supabase } from '../supabaseClient';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { ScanBarcode } from 'lucide-react';
 
@@ -59,6 +59,12 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
   const [produtosTotais, setProdutosTotais] = useState([]);
   const [formasPagamento, setFormasPagamento] = useState([]);
   const [toastEstoqueModal, setToastEstoqueModal] = useState('');
+  const [produtoPendente, setProdutoPendente] = useState(null);
+  const [emailGerente, setEmailGerente] = useState('');
+  const [senhaGerente, setSenhaGerente] = useState('');
+  const [descontoPromocional, setDescontoPromocional] = useState('0');
+  const [erroAutorizacao, setErroAutorizacao] = useState('');
+  const [autorizandoGerente, setAutorizandoGerente] = useState(false);
   
   const [termoBusca, setTermoBusca] = useState('');
   const [resultadosBusca, setResultadosBusca] = useState([]);
@@ -205,6 +211,18 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
         setDescontoGlobalPercStr(novo);
         break;
       }
+      case 'descontoValidade': {
+        let novo = String(descontoPromocional || '');
+        if (key === 'Backspace') {
+          novo = novo.slice(0, -1);
+        } else if (key === 'Clear') {
+          novo = '';
+        } else if (/^\d$/.test(key)) {
+          novo += key;
+        }
+        setDescontoPromocional(novo);
+        break;
+      }
       case 'descontoItem': {
         if (!modalEditar) return;
         let raw = String(modalEditar.descontoStr || '').replace(/\D/g, "");
@@ -305,6 +323,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
       'descontoGlobalValor': 'Desconto Global (R$)',
       'descontoGlobalPerc': 'Desconto Global (%)',
       'descontoItem': 'Desconto do Item (R$)',
+      'descontoValidade': 'Desconto Promocional (%)',
       'valorOperacao': 'Valor da Operação',
       'obsOperacao': 'Observação da Operação',
       'valorContadoFechamento': 'Dinheiro em Caixa (Contado)'
@@ -430,6 +449,8 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
                 setDescontoGlobalPercStr(val);
               } else if (campoFocado === 'descontoItem') {
                 setModalEditar(prev => ({ ...prev, descontoStr: mascaraMoeda(Math.round(parseFloat(val) * 100)) }));
+              } else if (campoFocado === 'descontoValidade') {
+                setDescontoPromocional(String(Math.round(Number(val))));
               } else if (campoFocado === 'valorOperacao') {
                 setValorOperacao(mascaraMoeda(Math.round(parseFloat(val) * 100)));
               } else if (campoFocado === 'valorContadoFechamento') {
@@ -464,7 +485,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
       return renderCalculadora();
     }
 
-    const inputsNumericos = ['recebido', 'descontoGlobalValor', 'descontoGlobalPerc', 'descontoItem', 'valorOperacao', 'valorContadoFechamento'];
+    const inputsNumericos = ['recebido', 'descontoGlobalValor', 'descontoGlobalPerc', 'descontoItem', 'descontoValidade', 'valorOperacao', 'valorContadoFechamento'];
     const isNumerico = inputsNumericos.includes(campoFocado);
 
     const labelFocoMap = {
@@ -473,6 +494,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
       'descontoGlobalValor': 'Desconto Global (R$)',
       'descontoGlobalPerc': 'Desconto Global (%)',
       'descontoItem': 'Desconto do Item (R$)',
+      'descontoValidade': 'Desconto Promocional (%)',
       'valorOperacao': 'Valor da Operação',
       'obsOperacao': 'Observação da Operação',
       'valorContadoFechamento': 'Dinheiro em Caixa (Contado)'
@@ -835,17 +857,47 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
     setResultadosBusca(encontrados);
   };
 
- const adicionarAoCarrinho = (produto) => {
-    if (produto.estoque <= 0) return mostrarToast(`Sem estoque: ${produto.descricao}`, 'erro');
+  const verificarDisponibilidadeProduto = (produto) => {
+    if (produto.estoque <= 0) {
+      mostrarToast(`Sem estoque: ${produto.descricao}`, 'erro');
+      return false;
+    }
 
-    let exibiuAviso = false; // <-- Criamos uma variável de controle aqui
+    const itemExistente = carrinho.find(item => item.id === produto.id);
+    if (itemExistente && itemExistente.quantidadeVenda >= produto.estoque) {
+      mostrarToast('Limite de estoque atingido.', 'erro');
+      return false;
+    }
 
-    // --- INÍCIO DO INCREMENTO: VALIDAÇÃO DE VALIDADE ---
+    return true;
+  };
+
+  const incluirProdutoNoCarrinho = (produto, desconto = 0, mensagem = 'Adicionado!') => {
+    if (!verificarDisponibilidadeProduto(produto)) return false;
+
+    const copia = [...carrinho];
+    const index = copia.findIndex(i => i.id === produto.id);
+    if (index >= 0) {
+      copia[index].quantidadeVenda += 1;
+      copia[index].desconto += desconto;
+    } else {
+      copia.push({ ...produto, quantidadeVenda: 1, desconto });
+    }
+    setCarrinho(copia);
+    mostrarToast(mensagem, 'sucesso');
+    setTermoBusca('');
+    setResultadosBusca([]);
+    return true;
+  };
+
+  const adicionarAoCarrinho = (produto) => {
+    if (!verificarDisponibilidadeProduto(produto)) return;
+
     if (produto.validade) {
       const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0); 
+      hoje.setHours(0, 0, 0, 0);
 
-      const dataValidade = new Date(`${produto.validade}T12:00:00`); 
+      const dataValidade = new Date(`${produto.validade}T12:00:00`);
       dataValidade.setHours(0, 0, 0, 0);
 
       const diffTime = dataValidade - hoje;
@@ -854,29 +906,83 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
       if (diffDays < 0) {
         return mostrarToast(`ATENÇÃO: Produto VENCIDO! (${produto.descricao})`, 'erro');
       } else if (diffDays <= 7) {
-        mostrarToast(`AVISO: ${produto.descricao} vence em ${diffDays} dia(s)!`, 'erro'); 
-        exibiuAviso = true; // <-- Avisamos que o alerta já está na tela
+        setProdutoPendente({ produto, diasParaVencer: diffDays });
+        setEmailGerente('');
+        setSenhaGerente('');
+        setDescontoPromocional('0');
+        setErroAutorizacao('');
+        return;
       }
-    } 
-    // --- FIM DO INCREMENTO ---
+    }
 
-    const copia = [...carrinho];
-    const index = copia.findIndex(i => i.id === produto.id);
-    if (index >= 0) {
-      if (copia[index].quantidadeVenda >= produto.estoque) return mostrarToast('Limite de estoque atingido.', 'erro');
-      copia[index].quantidadeVenda += 1;
-    } else {
-      copia.push({ ...produto, quantidadeVenda: 1, desconto: 0 });
+    incluirProdutoNoCarrinho(produto);
+  };
+
+  const cancelarAutorizacaoValidade = () => {
+    setProdutoPendente(null);
+    setEmailGerente('');
+    setSenhaGerente('');
+    setDescontoPromocional('0');
+    setErroAutorizacao('');
+  };
+
+  const autorizarProdutoPendente = async (e) => {
+    e.preventDefault();
+    if (!produtoPendente || autorizandoGerente) return;
+
+    const percentual = Number(descontoPromocional);
+    if (!Number.isFinite(percentual) || percentual < 0 || percentual >= 100) {
+      setErroAutorizacao('Informe um desconto entre 0% e 99%.');
+      return;
     }
-    setCarrinho(copia);
-    
-    // Só mostra "Adicionado!" se NÃO tiver exibido o alerta de validade
-    if (!exibiuAviso) {
-      mostrarToast('Adicionado!', 'sucesso');
+
+    setAutorizandoGerente(true);
+    setErroAutorizacao('');
+
+    try {
+      const clienteAutenticacao = criarClienteAutenticacaoIsolada();
+      const { data: autenticacao, error: erroLogin } = await clienteAutenticacao.auth.signInWithPassword({
+        email: emailGerente.trim(),
+        password: senhaGerente
+      });
+
+      if (erroLogin || !autenticacao.user) {
+        setErroAutorizacao('Não foi possível autorizar: confira as credenciais do gerente.');
+        return;
+      }
+
+      const { data: gerente, error: erroPerfil } = await clienteAutenticacao
+        .from('usuarios')
+        .select('tipo, ativo')
+        .eq('id', autenticacao.user.id)
+        .maybeSingle();
+
+      if (erroPerfil) {
+        setErroAutorizacao(`Erro ao validar o perfil gerencial: ${erroPerfil.message}`);
+        return;
+      }
+
+      if (!gerente || gerente.tipo !== 'adm' || gerente.ativo !== true) {
+        setErroAutorizacao('A autorização exige uma conta gerencial ativa.');
+        return;
+      }
+
+      const produto = produtoPendente.produto;
+      const desconto = Math.round(produto.preco * percentual) / 100;
+      if (desconto >= produto.preco) {
+        setErroAutorizacao('O desconto promocional não pode zerar o preço do produto.');
+        return;
+      }
+
+      if (incluirProdutoNoCarrinho(produto, desconto, 'Produto autorizado e adicionado ao carrinho.')) {
+        cancelarAutorizacaoValidade();
+      }
+    } catch (error) {
+      const detalhe = error instanceof Error ? error.message : 'Erro desconhecido.';
+      setErroAutorizacao(`Falha ao validar a autorização gerencial: ${detalhe}`);
+    } finally {
+      setAutorizandoGerente(false);
     }
-    
-    setTermoBusca('');
-    setResultadosBusca([]);
   };
 
   const abrirLeitor = () => {
@@ -1766,6 +1872,105 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
                <button onClick={() => { setModalFechamento(false); setValorContadoFechamento(''); }} className="btn-secundario" style={{ margin: 0 }} disabled={loading}>CANCELAR</button>
             </div>
           </div>
+        </Overlay>
+      )}
+
+      {produtoPendente && (
+        <Overlay>
+          <form
+            onSubmit={autorizarProdutoPendente}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-validade-proxima"
+            style={{ backgroundColor: 'white', padding: '26px', borderRadius: '20px', width: 'min(92vw, 460px)', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.25)' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+              <IconAlertTriangle color="#d97706" size="38" />
+            </div>
+            <h3 id="titulo-validade-proxima" style={{ color: '#92400e', textAlign: 'center', margin: '0 0 8px' }}>Produto próximo ao vencimento</h3>
+            <p style={{ color: '#4b5563', textAlign: 'center', marginBottom: '18px' }}>
+              <strong>{produtoPendente.produto.descricao}</strong>
+              <br />
+              Validade em {produtoPendente.diasParaVencer === 0 ? 'hoje' : `${produtoPendente.diasParaVencer} dia(s)`}.
+              <br />
+              Confirme a autorização gerencial antes de inserir o item no carrinho.
+            </p>
+
+            <div style={{ backgroundColor: '#f9fafb', padding: '14px', borderRadius: '12px', marginBottom: '16px' }}>
+              <LabelCampo>Desconto promocional (%)</LabelCampo>
+              <input
+                type="number"
+                min="0"
+                max="99"
+                step="1"
+                value={descontoPromocional}
+                onChange={e => setDescontoPromocional(e.target.value)}
+                onFocus={() => setCampoFocado('descontoValidade')}
+                className="input-padrao"
+                style={{ marginTop: '6px' }}
+                inputMode={isTabletLandscape ? 'none' : 'numeric'}
+                aria-label="Desconto promocional em porcentagem"
+              />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+                {[0, 5, 10, 15, 20, 25, 30, 40, 50].map(percentual => (
+                  <button
+                    key={percentual}
+                    type="button"
+                    onClick={() => setDescontoPromocional(String(percentual))}
+                    aria-pressed={Number(descontoPromocional) === percentual}
+                    style={{ padding: '7px 10px', backgroundColor: Number(descontoPromocional) === percentual ? '#4f46e5' : '#eef2ff', color: Number(descontoPromocional) === percentual ? 'white' : '#4f46e5', border: 'none', borderRadius: '8px', fontSize: '0.8rem' }}
+                  >
+                    {percentual}%
+                  </button>
+                ))}
+              </div>
+              <p style={{ color: '#6b7280', textAlign: 'right', fontSize: '0.85rem', marginTop: '10px' }}>
+                Preço promocional: <strong>{formatarMoeda(produtoPendente.produto.preco * (1 - (Number(descontoPromocional) || 0) / 100))}</strong>
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#4b5563' }}>
+                E-mail do gerente
+                <input
+                  type="email"
+                  value={emailGerente}
+                  onChange={e => setEmailGerente(e.target.value)}
+                  className="input-padrao"
+                  autoComplete="off"
+                  required
+                  style={{ marginTop: '5px' }}
+                />
+              </label>
+              <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#4b5563' }}>
+                Senha do gerente
+                <input
+                  type="password"
+                  value={senhaGerente}
+                  onChange={e => setSenhaGerente(e.target.value)}
+                  className="input-padrao"
+                  autoComplete="new-password"
+                  required
+                  style={{ marginTop: '5px' }}
+                />
+              </label>
+            </div>
+
+            {erroAutorizacao && (
+              <p role="alert" style={{ backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', padding: '10px 12px', borderRadius: '9px', fontSize: '0.85rem', marginBottom: '14px' }}>
+                {erroAutorizacao}
+              </p>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="button" onClick={cancelarAutorizacaoValidade} className="btn-secundario" style={{ flex: 1, margin: 0 }} disabled={autorizandoGerente}>
+                CANCELAR
+              </button>
+              <button type="submit" className="btn-entrada" style={{ flex: 1, margin: 0, border: 'none' }} disabled={autorizandoGerente}>
+                {autorizandoGerente ? 'VALIDANDO...' : 'AUTORIZAR E ADICIONAR'}
+              </button>
+            </div>
+          </form>
         </Overlay>
       )}
 
