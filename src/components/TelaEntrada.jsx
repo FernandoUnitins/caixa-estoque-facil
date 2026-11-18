@@ -2118,6 +2118,11 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
                   <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => abrirEdicao(index)}>
                     <strong style={{ display: 'block', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#374151' }}>{item.descricao}</strong>
                     <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>{item.quantidadeVenda}x R$ {formatarMoedaExibicao(item.preco)}</span>
+                    {item.desconto > 0 && (
+                      <span style={{ display: 'block', fontSize: '0.75rem', color: '#ef4444' }}>
+                        Desconto: -R$ {formatarMoedaExibicao(item.desconto)}
+                      </span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <strong style={{ color: '#10b981', fontSize: '0.85rem' }}>R$ {formatarMoedaExibicao((item.preco * item.quantidadeVenda) - item.desconto)}</strong>
