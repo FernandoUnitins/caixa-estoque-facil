@@ -73,6 +73,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
   const [isScanning, setIsScanning] = useState(false);
   const scannerRef = useRef(null);
   const tradutorIntervalRef = useRef(null);
+  const buscaRef = useRef(null);
   const [loading, setLoading] = useState(false);
 
   // Estados dos Modais
@@ -139,14 +140,11 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
   }, []);
 
   useEffect(() => {
-    if (isTabletLandscape) {
-      const timer = setTimeout(() => {
-        setCampoFocado('busca');
-        const el = document.querySelector('input[placeholder="Nome ou código..."]');
-        if (el) el.focus();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => {
+      setCampoFocado('busca');
+      buscaRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
   }, [isTabletLandscape]);
 
   const handleTecladoPress = (key) => {
@@ -888,6 +886,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
     mostrarToast(mensagem, 'sucesso');
     setTermoBusca('');
     setResultadosBusca([]);
+    setTimeout(() => buscaRef.current?.focus(), 0);
     return true;
   };
 
@@ -2058,6 +2057,7 @@ export default function TelaEntrada({ mostrarToast, sessaoCaixa, onCaixaFechado 
           <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
             <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
               <input
+                ref={buscaRef}
                 type="text"
                 placeholder="Nome ou código..."
                 value={termoBusca}
